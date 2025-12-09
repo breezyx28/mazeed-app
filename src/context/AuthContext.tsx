@@ -128,9 +128,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Determine redirect URL based on platform
       const redirectTo = CapacitorUtils.isNative() 
         ? 'mazeedapp://open' 
-        : `https://eqihnrwxroamwrlwpaig.supabase.co/auth/v1/callback`;
+        : undefined;
         
-      console.log('Redirecting to:', redirectTo);
+      console.log('Redirecting to:', redirectTo || 'auto-detect');
 
       // Force web auth as per request
       const { error } = await supabase.auth.signInWithOAuth({

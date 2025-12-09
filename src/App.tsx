@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -63,43 +69,230 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppContent = () => {
   const location = useLocation();
   const { i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
-  const hideBottomNav = ['/login', '/register'].includes(location.pathname);
+  const isRTL = i18n.language === "ar";
+  const hideBottomNav = ["/login", "/register"].includes(location.pathname);
 
   // Setup deep linking
   useDeepLinking();
 
   useEffect(() => {
-    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-    document.documentElement.setAttribute('lang', i18n.language);
+    document.documentElement.setAttribute("dir", isRTL ? "rtl" : "ltr");
+    document.documentElement.setAttribute("lang", i18n.language);
   }, [i18n.language, isRTL]);
 
   return (
     <>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-          <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
-          <Route path="/cart" element={<ProtectedRoute><PageTransition><Cart /></PageTransition></ProtectedRoute>} />
-          <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
-          <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
-          <Route path="/edit-profile" element={<ProtectedRoute><PageTransition><EditProfile /></PageTransition></ProtectedRoute>} />
-          <Route path="/shipping-address" element={<ProtectedRoute><PageTransition><ShippingAddressWithMap /></PageTransition></ProtectedRoute>} />
-          <Route path="/payment-methods" element={<ProtectedRoute><PageTransition><PaymentMethods /></PageTransition></ProtectedRoute>} />
-          <Route path="/my-orders" element={<ProtectedRoute><PageTransition><MyOrders /></PageTransition></ProtectedRoute>} />
-          <Route path="/wishlist" element={<ProtectedRoute><PageTransition><Wishlist /></PageTransition></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><PageTransition><Notifications /></PageTransition></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><PageTransition><Settings /></PageTransition></ProtectedRoute>} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
-          <Route path="/checkout" element={<ProtectedRoute><PageTransition><Checkout /></PageTransition></ProtectedRoute>} />
-          <Route path="/payment-selection" element={<ProtectedRoute><PageTransition><PaymentSelection /></PageTransition></ProtectedRoute>} />
-          <Route path="/order-success" element={<ProtectedRoute><PageTransition><OrderSuccess /></PageTransition></ProtectedRoute>} />
-          <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
-          <Route path="/offers" element={<PageTransition><Offers /></PageTransition>} />
-          <Route path="/product/:id/reviews" element={<PageTransition><ProductReviews /></PageTransition>} />
-          <Route path="/biometric-test" element={<PageTransition><BiometricTest /></PageTransition>} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+          {/* doesn't have private route */}
+          <Route
+            path="/login"
+            element={
+              <PageTransition>
+                <Login />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PageTransition>
+                <Register />
+              </PageTransition>
+            }
+          />
+          {/* ------------- */}
+
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Home />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/product/:id"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ProductDetail />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Cart />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <SearchPage />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Profile />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <EditProfile />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shipping-address"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <ShippingAddressWithMap />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment-methods"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <PaymentMethods />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <MyOrders />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Wishlist />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Notifications />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Settings />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <Checkout />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment-selection"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <PaymentSelection />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-success"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <OrderSuccess />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <PageTransition>
+                <Categories />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/offers"
+            element={
+              <PageTransition>
+                <Offers />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/product/:id/reviews"
+            element={
+              <PageTransition>
+                <ProductReviews />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/biometric-test"
+            element={
+              <PageTransition>
+                <BiometricTest />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <PageTransition>
+                <NotFound />
+              </PageTransition>
+            }
+          />
         </Routes>
       </AnimatePresence>
       {!hideBottomNav && <BottomNav />}
@@ -112,7 +305,7 @@ const App = () => {
 
   useEffect(() => {
     // Initialize Capacitor plugins
-    import('./lib/capacitor-utils').then(({ CapacitorUtils }) => {
+    import("./lib/capacitor-utils").then(({ CapacitorUtils }) => {
       CapacitorUtils.initialize();
     });
   }, []);
