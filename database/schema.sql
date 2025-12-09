@@ -6,6 +6,7 @@ create type user_role as enum ('admin', 'customer');
 create type order_status as enum ('pending', 'processing', 'shipped', 'delivered', 'cancelled');
 create type payment_type as enum ('card', 'cod', 'wallet');
 create type address_type as enum ('home', 'work', 'other');
+create type video_type as enum ('uploaded', 'external_link');
 
 -- 2. PROFILES (Extends auth.users)
 create table public.profiles (
@@ -243,6 +244,31 @@ create table public.system_settings (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 22. PRODUCT VIDEOS
+create table public.product_videos (
+  id uuid default uuid_generate_v4() primary key,
+  product_id text not null,
+  video_type video_type default 'uploaded' not null,
+  video_url text not null,
+  thumbnail_url text,
+  caption text,
+  link_title text,
+  link_description text,
+  link_image text,
+  views integer default 0,
+  duration integer,
+  is_active boolean default true,
+  display_order integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  
+  constraint fk_product_videos_product_id 
+    foreign key (product_id) 
+    references public.products(id) 
+    on delete cascade
+    on update cascade
+);
+
 -- ROW LEVEL SECURITY (RLS) POLICIES
 
 -- Enable RLS on all tables
@@ -266,6 +292,7 @@ alter table ticket_messages enable row level security;
 alter table admin_audit_logs enable row level security;
 alter table dynamic_pages enable row level security;
 alter table system_settings enable row level security;
+alter table product_videos enable row level security;
 
 -- Profiles: Public read, User update own
 create policy "Public profiles are viewable by everyone" on profiles for select using (true);
@@ -322,6 +349,12 @@ create policy "Users can create messages for own tickets" on ticket_messages for
 -- System Settings: Public read (some), Admin write
 create policy "Settings are viewable by everyone" on system_settings for select using (true);
 
+-- Product Videos: Public read (if active), Admin write
+create policy "Product videos are viewable by everyone" on product_videos for select using (is_active = true);
+create policy "Admins can manage product videos" on product_videos for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+
 -- TRIGGERS
 
 -- Auto-create profile on signup
@@ -337,6 +370,11 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Create indexes for product_videos
+create index idx_product_videos_product_id on product_videos(product_id);
+create index idx_product_videos_active on product_videos(is_active);
+create index idx_product_videos_display_order on product_videos(display_order);
 
 -- SEED DATA
 
