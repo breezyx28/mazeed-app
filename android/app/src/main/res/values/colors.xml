@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary brand color - Golden/Amber -->
+    <color name="colorPrimary">#D97706</color> <!-- amber-600 -->
+    <color name="colorPrimaryDark">#B45309</color> <!-- amber-700 -->
+    <color name="colorAccent">#F59E0B</color> <!-- amber-500 -->
+    
+    <!-- Background colors -->
+    <color name="backgroundColor">#FFFFFF</color>
+    
+    <!-- Status bar color -->
+    <color name="statusBarColor">#D97706</color>
+</resources>

@@ -1,0 +1,21 @@
+{
+  "android": {
+    "icon": {
+      "sources": [
+        {
+          "src": "public/assets/icons/android-chrome-512x512.png",
+          "foreground": "public/assets/icons/android-chrome-512x512.png",
+          "background": "#FFFFFF"
+        }
+      ]
+    },
+    "splash": {
+      "sources": [
+        {
+          "src": "public/assets/icons/android-chrome-512x512.png",
+          "background": "#FFFFFF"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mazeed App - Deep Link Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .deep-link {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .deep-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .deep-link:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .url-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 5px;
+            word-break: break-all;
+            color: #333;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-custom:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .link-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Mazeed App</h1>
+        <p class="subtitle">Deep Link Testing Page</p>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> The Mazeed app must be installed on your device for these links to work. If the app is not installed, clicking these links will do nothing.
+        </div>
+
+        <div class="info-box">
+            <strong>📱 App ID:</strong> com.mazeedapp.app<br>
+            <strong>🔗 URL Scheme:</strong> mazeedapp://
+        </div>
+
+        <!-- Basic Navigation -->
+        <div class="section">
+            <h2>🏠 Basic Navigation</h2>
+            <div class="link-grid">
+                <a href="mazeedapp://open" class="deep-link">Home</a>
+                <a href="mazeedapp://open/categories" class="deep-link">Categories</a>
+                <a href="mazeedapp://open/offers" class="deep-link">Offers</a>
+                <a href="mazeedapp://open/search" class="deep-link">Search</a>
+            </div>
+        </div>
+
+        <!-- Product Links -->
+        <div class="section">
+            <h2>📦 Product Pages</h2>
+            <div class="link-grid">
+                <a href="mazeedapp://open/product/1" class="deep-link">Product #1</a>
+                <a href="mazeedapp://open/product/2" class="deep-link">Product #2</a>
+                <a href="mazeedapp://open/product/3" class="deep-link">Product #3</a>
+                <a href="mazeedapp://open/product/123" class="deep-link">Product #123</a>
+            </div>
+        </div>
+
+        <!-- User Pages (Require Login) -->
+        <div class="section">
+            <h2>👤 User Pages (Login Required)</h2>
+            <div class="link-grid">
+                <a href="mazeedapp://open/profile" class="deep-link">Profile</a>
+                <a href="mazeedapp://open/cart" class="deep-link">Cart</a>
+                <a href="mazeedapp://open/wishlist" class="deep-link">Wishlist</a>
+                <a href="mazeedapp://open/my-orders" class="deep-link">My Orders</a>
+                <a href="mazeedapp://open/notifications" class="deep-link">Notifications</a>
+                <a href="mazeedapp://open/settings" class="deep-link">Settings</a>
+            </div>
+        </div>
+
+        <!-- With Parameters -->
+        <div class="section">
+            <h2>🎯 Links with Tracking Parameters</h2>
+            <div class="link-grid">
+                <a href="mazeedapp://open?page=/product/1&ref=whatsapp" class="deep-link">Product (WhatsApp)</a>
+                <a href="mazeedapp://open?page=/product/2&source=email&campaign=summer" class="deep-link">Product (Email)</a>
+                <a href="mazeedapp://open?page=/offers&utm_source=test" class="deep-link">Offers (Test)</a>
+            </div>
+        </div>
+
+        <!-- Custom Link Generator -->
+        <div class="section">
+            <h2>🛠️ Custom Link Generator</h2>
+            <input 
+                type="text" 
+                id="customRoute" 
+                class="custom-input" 
+                placeholder="Enter route (e.g., /product/456)"
+                value="/product/123"
+            >
+            <button class="btn-custom" onclick="openCustomLink()">Open Custom Link</button>
+            <div class="url-display" id="generatedUrl">mazeedapp://open/product/123</div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="section">
+            <h2>📖 How to Use</h2>
+            <div class="info-box">
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>Make sure the Mazeed app is installed on your device</li>
+                    <li>Click any link above to open the app at that specific page</li>
+                    <li>Links marked "Login Required" will redirect to login if you're not authenticated</li>
+                    <li>Use the Custom Link Generator to test any route</li>
+                    <li>Share this page or send links via WhatsApp, Email, SMS to test</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Testing via ADB -->
+        <div class="section">
+            <h2>💻 Testing via ADB</h2>
+            <div class="info-box">
+                <p style="margin-bottom: 10px;">You can also test deep links using Android Debug Bridge (ADB):</p>
+                <div class="url-display">adb shell am start -a android.intent.action.VIEW -d "mazeedapp://open/product/123"</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCustomLink() {
+            const route = document.getElementById('customRoute').value;
+            let url;
+            
+            if (route.startsWith('/')) {
+                url = 'mazeedapp://open' + route;
+            } else {
+                url = 'mazeedapp://open/' + route;
+            }
+            
+            document.getElementById('generatedUrl').textContent = url;
+            
+            // Try to open the link
+            window.location.href = url;
+            
+            // Fallback message after a delay
+            setTimeout(() => {
+                alert('If the app didn\'t open, make sure it\'s installed on your device.');
+            }, 1000);
+        }
+
+        // Update generated URL as user types
+        document.getElementById('customRoute').addEventListener('input', function(e) {
+            const route = e.target.value;
+            let url;
+            
+            if (route.startsWith('/')) {
+                url = 'mazeedapp://open' + route;
+            } else if (route) {
+                url = 'mazeedapp://open/' + route;
+            } else {
+                url = 'mazeedapp://open';
+            }
+            
+            document.getElementById('generatedUrl').textContent = url;
+        });
+    </script>
+</body>
+</html>
