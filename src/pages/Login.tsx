@@ -123,7 +123,7 @@ const Login = () => {
     try {
       await loginWithEmail(data.email, data.password);
       
-      // Save credentials for local authentication
+      // Save credentials for biometric authentication
       if (CapacitorUtils.isNative()) {
         await CapacitorUtils.setCredentials({
           username: data.email,
@@ -132,6 +132,7 @@ const Login = () => {
         });
       }
 
+      toast.success(t('loginSuccess') || 'Login successful!');
       navigate("/");
     } catch (error: any) {
       toast.error(error.message || t("loginError"));

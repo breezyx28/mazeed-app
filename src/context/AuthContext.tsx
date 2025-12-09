@@ -4,15 +4,27 @@ import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { CapacitorUtils } from '@/lib/capacitor-utils';
 
+interface Profile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone_number: string | null;
+  gender: string | null;
+  age: number | null;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
+  isProfileComplete: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signupWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,39 +34,107 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
+  const [isFetchingProfile, setIsFetchingProfile] = useState<boolean>(false);
+
+  const fetchProfile = async (userId: string) => {
+    if (isFetchingProfile) return;
+    
+    setIsFetchingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          const emptyProfile: Profile = {
+            id: userId,
+            full_name: null,
+            avatar_url: null,
+            phone_number: null,
+            gender: null,
+            age: null
+          };
+          setProfile(emptyProfile);
+          setIsProfileComplete(false);
+          return emptyProfile;
+        }
+        throw error;
+      }
+      
+      setProfile(data);
+      const isComplete = !!(data.full_name && data.phone_number && data.gender && data.age);
+      setIsProfileComplete(isComplete);
+      
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      const emptyProfile: Profile = {
+        id: userId,
+        full_name: null,
+        avatar_url: null,
+        phone_number: null,
+        gender: null,
+        age: null
+      };
+      setProfile(emptyProfile);
+      setIsProfileComplete(false);
+      return null;
+    } finally {
+      setIsFetchingProfile(false);
+    }
+  };
 
   const upsertProfile = async (user: User, userData?: { full_name?: string; avatar_url?: string }) => {
     try {
       const updates = {
         id: user.id,
-        email: user.email,
-        full_name: userData?.full_name || user.user_metadata.full_name || user.user_metadata.name,
-        avatar_url: userData?.avatar_url || user.user_metadata.avatar_url || user.user_metadata.picture,
+        full_name: userData?.full_name || user.user_metadata.full_name || user.user_metadata.name || null,
+        avatar_url: userData?.avatar_url || user.user_metadata.avatar_url || user.user_metadata.picture || null,
         updated_at: new Date().toISOString(),
       };
 
       const { error } = await supabase
         .from('profiles')
-        .upsert(updates);
+        .upsert(updates, { onConflict: 'id' });
 
       if (error) {
-        console.error('Error updating profile:', error);
+        console.error('Error upserting profile:', error);
       }
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      
+      await fetchProfile(user.id);
+    } catch (error: any) {
+      console.error('Error in upsertProfile:', error);
+      await fetchProfile(user.id);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
     }
   };
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setIsAuthenticated(!!session);
+      
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
+      
+      setIsLoading(false);
+    }).catch(error => {
+      console.error('Error getting session:', error);
       setIsLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -63,8 +143,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(!!session);
       setIsLoading(false);
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        await upsertProfile(session.user);
+      if (event === 'SIGNED_OUT') {
+        setProfile(null);
+        setIsProfileComplete(false);
       }
     });
 
@@ -219,11 +300,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthenticated, 
       isLoading, 
       user, 
-      session, 
+      session,
+      profile,
+      isProfileComplete,
       loginWithGoogle, 
       loginWithEmail,
       signupWithEmail,
-      logout 
+      logout,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>

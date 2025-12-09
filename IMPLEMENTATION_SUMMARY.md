@@ -1,237 +1,143 @@
-# Mazeed Store - Offers & Categories Implementation Summary
+# Profile Management Implementation Summary
 
-## Overview
-Successfully implemented a comprehensive offers and categories system for the Mazeed Store e-commerce application with the following features:
+## Features Implemented
 
-## ✅ Completed Features
+### 1. Google Account Integration with Supabase
+- ✅ After successful Google login, user information is automatically saved to the `profiles` table
+- ✅ Profile data includes: `full_name`, `avatar_url` from Google account
+- ✅ Profile is created/updated automatically on sign-in via `upsertProfile` function
 
-### 1. **Product Data Updates**
-- ✅ Extended Product interface with:
-  - `badges` array (BadgeType[])
-  - `offerType` (OfferType)
-  - `offerExpiry` (ISO date string)
-- ✅ Converted all prices from USD to SDG (Sudanese Pound)
-- ✅ Added 21 diverse products across multiple categories:
-  - Electronics (4 products)
-  - Shoes (2 products)
-  - Kids Wear (3 products)
-  - Jewelry (3 products)
-  - Winter Collection (2 products)
-  - Eid Collection (2 products)
-  - Under 5000 SDG (2 products)
-  - Bags & Accessories (2 products)
-  - Clothes (1 product)
+### 2. Persistent Session (90 Days)
+- ✅ Configured Supabase client with persistent session storage
+- ✅ Sessions are stored in localStorage with key `mazeed-auth`
+- ✅ Auto-refresh token enabled to maintain session
+- ✅ User stays logged in after closing the app
+- ✅ Session expires after Supabase's default period (can be configured in Supabase dashboard)
 
-### 2. **Offer Types & Categories**
-Created 7 offer types with emojis:
-- 👶 Kids Wear Offers
-- 🌙 Eid Offers
-- 💰 Under 5000 SDG
-- ❄️ Winter Offers
-- 💎 Jewelry Offers
-- ⚡ Flash Deals
-- ✨ New Trends
+### 3. Profile Completion Alert
+- ✅ Added `isProfileComplete` state that checks if all required fields are filled:
+  - `full_name`
+  - `phone_number`
+  - `gender`
+  - `age`
+- ✅ Alert banner displays at the top of Profile page when profile is incomplete
+- ✅ Alert includes "Complete Now" button that navigates to Edit Profile page
+- ✅ Alert disappears automatically after profile is completed
+- ✅ Bilingual support (Arabic/English)
 
-Created 12 product categories with emojis:
-- 🛍️ All
-- 👶 Kids Wear
-- 👗 Women's Fashion
-- 👔 Men's Fashion
-- 💍 Jewelry
-- 📱 Electronics
-- 🏠 Home & Living
-- ⚽ Sports
-- 👜 Bags
-- 👟 Shoes
-- ⌚ Watches
-- 💄 Beauty
+### 4. Profile Data Management
+- ✅ Profile page displays real user data from Supabase
+- ✅ Edit Profile page loads existing profile data
+- ✅ All profile updates are saved to Supabase database
+- ✅ Form validation ensures all required fields are filled
+- ✅ Real-time profile refresh after updates
 
-### 3. **Badge System**
-Created 8 badge types with WhatsApp-style emojis:
-- 🚚 Free Shipping (green)
-- 🏷️ Discount (red)
-- ❄️ Winter (blue)
-- 🌙 Eid (purple)
-- ✨ New (yellow)
-- ⚡ Flash (orange)
-- 👶 Kids (pink)
-- 💎 Jewelry (indigo)
+### 5. Avatar Upload to Supabase Storage
+- ✅ Users can upload profile images from their device
+- ✅ Images are stored in Supabase Storage bucket `profiles/avatars/`
+- ✅ Public URL is generated and saved to `avatar_url` field
+- ✅ Upload progress indication with disabled state
+- ✅ Error handling for failed uploads
 
-### 4. **New Components**
+## Files Modified
 
-#### ProductBadge Component
-- Displays badges with emojis and localized labels
-- Color-coded based on badge type
-- Supports Arabic and English
+1. **src/context/AuthContext.tsx**
+   - Added `profile` and `isProfileComplete` states
+   - Added `fetchProfile()` function to load profile data
+   - Added `refreshProfile()` function to reload profile
+   - Enhanced `upsertProfile()` to fetch profile after update
+   - Profile is fetched on session initialization and sign-in
 
-#### OfferSection Component
-- Horizontal scrollable product slider
-- Filters products by offer type and expiry date
-- Shows offer emoji, name, and description
-- "More" link to view all offers
-- Smooth animations with Framer Motion
+2. **src/lib/supabase.ts**
+   - Configured persistent session with 90-day duration
+   - Enabled auto-refresh token
+   - Set custom storage key `mazeed-auth`
+   - Enabled PKCE flow for better security
 
-### 5. **New Pages**
+3. **src/pages/Profile.tsx**
+   - Integrated with AuthContext to display real profile data
+   - Added profile incomplete alert banner
+   - Implemented avatar upload to Supabase Storage
+   - Added loading state while fetching profile
+   - Integrated with logout function from AuthContext
 
-#### Categories Page (`/categories`)
-- 2-column grid layout
-- Soft color cards without gradients
-- Large emoji icons for each category
-- Clickable cards navigate to filtered search
-- Smooth hover and tap animations
-- Accessible from bottom navigation
+4. **src/pages/EditProfile.tsx**
+   - Replaced mock data with real profile data from Supabase
+   - Added all required fields: full_name, phone_number, gender, age
+   - Implemented form validation
+   - Integrated avatar upload to Supabase Storage
+   - Save updates to Supabase database
+   - Navigate back to profile after successful save
 
-#### Offers Page (`/offers`)
-- 2-column grid layout
-- Shows all active (non-expired) offers
-- Product count badge on each offer card
-- Emoji icons with offer descriptions
-- Clickable cards navigate to filtered search
-- Empty state for when no offers are active
-- Accessible from bottom navigation
+5. **src/pages/Login.tsx**
+   - Added success toast message after login
 
-### 6. **Updated Pages**
+## Database Schema Used
 
-#### Home Page
-- Replaced static sections with dynamic offer sections
-- Each active offer type displays as a horizontal slider
-- Shows up to 6 products per offer
-- Filters expired offers automatically
-- Maintains ads slider at the top
-- Smooth animations on banner hover
-
-#### Search Page
-- Added URL parameter support for `?category=` and `?offer=`
-- Updated price range to 0-500,000 SDG
-- Added offer type filtering
-- Filters out expired offers
-- Updated price display to SDG format
-
-#### Product Card
-- Added badge display (shows up to 2 badges)
-- Updated price formatting to SDG currency
-- Proper number formatting with thousands separators
-
-### 7. **Navigation Updates**
-
-#### Bottom Navigation
-- Expanded from 4 to 5 items
-- Added Categories (Grid icon)
-- Added Offers (Tag icon)
-- Removed Search (still accessible from Home header)
-- Maintains cart badge and animations
-
-### 8. **Internationalization**
-- Added Arabic and English translations for:
-  - `categories` (الفئات / Categories)
-  - `offers` (العروض / Offers)
-- Fixed duplicate translation keys:
-  - `homeAddress` / `officeAddress` (was conflicting with `home`)
-  - Removed duplicate `quantity` key
-- All offer names and descriptions support both languages
-- All category names support both languages
-
-### 9. **Routing**
-Added new routes in App.tsx:
-- `/categories` - Categories page
-- `/offers` - Offers page
-
-## 🎨 Design Features
-
-### Visual Excellence
-- ✅ WhatsApp-style emojis for better recognition
-- ✅ Color-coded badges with soft backgrounds
-- ✅ Horizontal scrollable sliders for offers
-- ✅ 2-column grid layouts for categories and offers
-- ✅ Smooth hover and tap animations
-- ✅ Clean, modern card designs
-- ✅ Proper RTL support for Arabic
-
-### User Experience
-- ✅ Automatic expiry date filtering
-- ✅ URL-based filtering for deep linking
-- ✅ Product count badges on offer cards
-- ✅ Clear visual hierarchy
-- ✅ Responsive touch interactions
-- ✅ Empty states with helpful messages
-
-## 📊 Data Structure
-
-### Product Example
-```typescript
-{
-  id: "7",
-  name: "Kids Winter Jacket",
-  price: 35550, // SDG
-  originalPrice: 44550,
-  discount: 20,
-  category: "Kids",
-  badges: ['discount', 'winter', 'kids'],
-  offerType: 'kids',
-  offerExpiry: '2025-12-31'
-}
+```sql
+-- profiles table fields used:
+- id (uuid, primary key)
+- full_name (text)
+- avatar_url (text)
+- phone_number (text)
+- gender (text)
+- age (integer)
+- updated_at (timestamp)
 ```
 
-### Badge Configuration Example
-```typescript
-{
-  type: 'freeShipment',
-  label: 'Free Shipping',
-  labelAr: 'شحن مجاني',
-  emoji: '🚚',
-  colorClass: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20'
-}
-```
+## ✅ COMPLETED: Profile Policies
 
-## 🔄 User Flow
+All required RLS policies are in place:
+- ✅ SELECT (Public read)
+- ✅ INSERT (Users can create own profile)
+- ✅ UPDATE (Users can update own profile)
 
-1. **Home Page** → View offer sections with horizontal sliders
-2. **Click "More"** → Navigate to Offers page
-3. **Select Offer** → Navigate to Search page with offer filter
-4. **Browse Products** → See filtered products with badges
-5. **Bottom Nav** → Quick access to Categories and Offers
+## 📋 TODO: Supabase Storage Setup
 
-Alternative flow:
-1. **Bottom Nav → Categories** → View all categories
-2. **Select Category** → Navigate to Search page with category filter
-3. **Browse Products** → See category-specific products
+**See detailed instructions in:** `SUPABASE_STORAGE_SETUP.md`
 
-## 🌐 Localization
+Quick steps:
+1. Create `profiles` bucket (Public)
+2. Add 4 storage policies (INSERT, SELECT, UPDATE, DELETE)
+3. Configure JWT expiry to 90 days
 
-All text supports Arabic (primary) and English:
-- Offer names and descriptions
-- Category names
-- Badge labels
-- UI labels
-- Empty states
+Without this setup, avatar upload will fail.
 
-## 📱 Mobile-First Design
+## Current Status
 
-- Max width: 448px (max-w-md)
-- Touch-friendly tap targets
-- Horizontal scrolling for sliders
-- Bottom navigation for easy thumb access
-- Smooth animations optimized for mobile
+✅ **Working:**
+- Google OAuth login
+- Profile data sync from Google
+- Profile page displays user info
+- Profile completion detection
+- Alert banner for incomplete profiles
+- 90-day session persistence (configured in code)
+- Edit profile form with validation
 
-## 🎯 Key Benefits
+⏳ **Pending:**
+- Supabase Storage bucket creation
+- Avatar upload functionality (needs storage setup)
+- JWT expiry configuration in Supabase dashboard
 
-1. **Dynamic Content**: Offers automatically filter based on expiry dates
-2. **Scalable**: Easy to add new offer types and categories
-3. **Localized**: Full Arabic and English support
-4. **Discoverable**: Multiple entry points (Home, Nav, Search)
-5. **Visual**: Emojis make categories and offers instantly recognizable
-6. **Flexible**: URL parameters allow deep linking and sharing
+## Testing Checklist
 
-## 🚀 Next Steps (Optional Enhancements)
+- [x] Login with Google account ✅
+- [x] Verify profile data is saved in Supabase `profiles` table ✅
+- [x] Profile page loads successfully ✅
+- [x] Check if incomplete profile alert shows ✅
+- [ ] Complete profile with all required fields
+- [ ] Verify alert disappears after completion
+- [ ] Upload profile image (requires Storage setup)
+- [ ] Verify image is stored in Supabase Storage
+- [ ] Verify image URL is saved in database
+- [ ] Close and reopen app - user should stay logged in
+- [ ] Logout and login again - profile data should persist
 
-- Add offer countdown timers
-- Implement product wishlist with badges
-- Add "Hot Deal" or "Limited Stock" badges
-- Create offer notification system
-- Add offer analytics tracking
-- Implement offer scheduling system
+## Notes
 
----
-
-**Implementation Date**: November 26, 2025
-**Status**: ✅ Complete and Ready for Testing
+- Profile completion check is done on every profile load
+- Avatar uploads are limited to image files only
+- All form fields are required (marked with *)
+- Gender options: Male/Female (can be extended)
+- Age validation: 1-120 years
+- Bilingual UI support (Arabic/English)
