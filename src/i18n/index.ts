@@ -128,6 +128,12 @@ const resources = {
       // Categories and Offers
       categories: 'الفئات',
       offers: 'العروض',
+      reels: 'ريلز',
+      productVideos: 'فيديوهات المنتجات',
+      viewProduct: 'عرض المنتج',
+      noVideosYet: 'لا توجد فيديوهات بعد',
+      noVideosDescription: 'سيتم عرض فيديوهات المنتجات هنا قريباً',
+      backToHome: 'العودة للرئيسية',
       // Login page
       biometricNotAvailableNative: 'المصادقة البيومترية متاحة فقط على الأجهزة الأصلية',
       fingerprintNotAvailable: 'مصادقة البصمة غير متاحة على هذا الجهاز',
@@ -278,6 +284,12 @@ const resources = {
       // Categories and Offers
       categories: 'Categories',
       offers: 'Offers',
+      reels: 'Reels',
+      productVideos: 'Product Videos',
+      viewProduct: 'View Product',
+      noVideosYet: 'No Videos Yet',
+      noVideosDescription: 'Product videos will appear here soon',
+      backToHome: 'Back to Home',
       // Login page
       biometricNotAvailableNative: 'Biometric authentication is only available on native devices',
       fingerprintNotAvailable: 'Fingerprint authentication is not available on this device',

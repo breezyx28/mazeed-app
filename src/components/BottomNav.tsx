@@ -1,4 +1,4 @@
-import { Home, Search, ShoppingCart, User, Grid, Tag } from "lucide-react";
+import { Home, Search, ShoppingCart, User, Grid, Tag, Video } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useTranslation } from "react-i18next";
 import { Icon3D } from "@/components/3DIcon";
@@ -12,7 +12,7 @@ export const BottomNav = () => {
   const navItems = [
     { path: '/', icon: Home, label: t('home') },
     { path: '/categories', icon: Grid, label: t('categories') },
-    { path: '/offers', icon: Tag, label: t('offers') },
+    { path: '/reels', icon: Video, label: t('reels') },
     { path: '/cart', icon: ShoppingCart, label: t('cart'), badge: 2 },
     { path: '/profile', icon: User, label: t('profile') },
   ];

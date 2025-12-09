@@ -34,6 +34,7 @@ import Categories from "./pages/Categories";
 import Offers from "./pages/Offers";
 import ProductReviews from "./pages/ProductReviews";
 import BiometricTest from "./pages/BiometricTest";
+import ProductReels from "./pages/ProductReels";
 import { BottomNav } from "./components/BottomNav";
 import { PageTransition } from "./components/PageTransition";
 import { SplashScreen } from "./components/SplashScreen";
@@ -70,7 +71,7 @@ const AppContent = () => {
   const location = useLocation();
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
-  const hideBottomNav = ["/login", "/register"].includes(location.pathname);
+  const hideBottomNav = ["/login", "/register", "/reels"].includes(location.pathname);
 
   // Setup deep linking
   useDeepLinking();
@@ -283,6 +284,14 @@ const AppContent = () => {
               <PageTransition>
                 <BiometricTest />
               </PageTransition>
+            }
+          />
+          <Route
+            path="/reels"
+            element={
+              <ProtectedRoute>
+                <ProductReels />
+              </ProtectedRoute>
             }
           />
           <Route

@@ -24,6 +24,12 @@ const EditProfile = () => {
     gender: '',
     age: '',
   });
+  const [errors, setErrors] = useState({
+    full_name: false,
+    phone_number: false,
+    gender: false,
+    age: false,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -44,7 +50,16 @@ const EditProfile = () => {
     if (!user) return;
 
     // Validate required fields
-    if (!formData.full_name || !formData.phone_number || !formData.gender || !formData.age) {
+    const newErrors = {
+      full_name: !formData.full_name,
+      phone_number: !formData.phone_number,
+      gender: !formData.gender,
+      age: !formData.age,
+    };
+    
+    setErrors(newErrors);
+    
+    if (Object.values(newErrors).some(error => error)) {
       toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
       return;
     }
@@ -158,10 +173,16 @@ const EditProfile = () => {
             <Input
               id="full_name"
               value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              className="h-12 rounded-xl"
+              onChange={(e) => {
+                setFormData({ ...formData, full_name: e.target.value });
+                setErrors({ ...errors, full_name: false });
+              }}
+              className={`h-12 rounded-xl ${errors.full_name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'}
             />
+            {errors.full_name && (
+              <p className="text-sm text-red-500">{isRTL ? 'هذا الحقل مطلوب' : 'This field is required'}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -170,16 +191,28 @@ const EditProfile = () => {
               id="phone_number"
               type="tel"
               value={formData.phone_number}
-              onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              className="h-12 rounded-xl"
+              onChange={(e) => {
+                setFormData({ ...formData, phone_number: e.target.value });
+                setErrors({ ...errors, phone_number: false });
+              }}
+              className={`h-12 rounded-xl ${errors.phone_number ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               placeholder="+249 XXX XXX XXX"
             />
+            {errors.phone_number && (
+              <p className="text-sm text-red-500">{isRTL ? 'هذا الحقل مطلوب' : 'This field is required'}</p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="gender">{isRTL ? 'الجنس' : 'Gender'} *</Label>
-            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-              <SelectTrigger className="h-12 rounded-xl">
+            <Select 
+              value={formData.gender} 
+              onValueChange={(value) => {
+                setFormData({ ...formData, gender: value });
+                setErrors({ ...errors, gender: false });
+              }}
+            >
+              <SelectTrigger className={`h-12 rounded-xl ${errors.gender ? 'border-red-500 focus-visible:ring-red-500' : ''}`}>
                 <SelectValue placeholder={isRTL ? 'اختر الجنس' : 'Select gender'} />
               </SelectTrigger>
               <SelectContent>
@@ -187,6 +220,9 @@ const EditProfile = () => {
                 <SelectItem value="female">{isRTL ? 'أنثى' : 'Female'}</SelectItem>
               </SelectContent>
             </Select>
+            {errors.gender && (
+              <p className="text-sm text-red-500">{isRTL ? 'هذا الحقل مطلوب' : 'This field is required'}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -195,12 +231,18 @@ const EditProfile = () => {
               id="age"
               type="number"
               value={formData.age}
-              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-              className="h-12 rounded-xl"
+              onChange={(e) => {
+                setFormData({ ...formData, age: e.target.value });
+                setErrors({ ...errors, age: false });
+              }}
+              className={`h-12 rounded-xl ${errors.age ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               placeholder={isRTL ? 'أدخل عمرك' : 'Enter your age'}
               min="1"
               max="120"
             />
+            {errors.age && (
+              <p className="text-sm text-red-500">{isRTL ? 'هذا الحقل مطلوب' : 'This field is required'}</p>
+            )}
           </div>
         </div>
 
