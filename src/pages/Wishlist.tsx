@@ -1,17 +1,26 @@
-import { ArrowLeft, ArrowRight, Heart, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart, ShoppingCart, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { products } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useMemo } from "react";
 
 const Wishlist = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const wishlistItems = products.slice(0, 4);
+  const { wishlistItems: wishlistData, isLoading, removeFromWishlist } = useWishlist();
 
-  const removeFromWishlist = (id: number) => {
+  const wishlistItems = useMemo(() => {
+    return wishlistData
+      .map(item => products.find(product => product.id === item.product_id))
+      .filter(Boolean);
+  }, [wishlistData]);
+
+  const handleRemoveFromWishlist = async (productId: string) => {
+    await removeFromWishlist(productId);
     toast.success("تم إزالته من المفضلة");
   };
 
@@ -27,12 +36,23 @@ const Wishlist = () => {
             {isRTL ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </button>
           <h1 className="text-xl font-bold">{t('wishlist')}</h1>
-          <span className="ml-auto text-sm text-muted-foreground">{wishlistItems.length} عنصر</span>
+          <span className="ml-auto text-sm text-muted-foreground">
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              `${wishlistItems.length} عنصر`
+            )}
+          </span>
         </div>
       </header>
 
       <div className="max-w-md mx-auto px-4 py-6">
-        {wishlistItems.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">جاري تحميل المفضلة...</p>
+          </div>
+        ) : wishlistItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <Heart className="w-10 h-10 text-muted-foreground" />
@@ -58,7 +78,7 @@ const Wishlist = () => {
                         <p className="text-sm text-muted-foreground">{item.category}</p>
                       </div>
                       <button
-                        onClick={() => removeFromWishlist(parseInt(item.id))}
+                        onClick={() => handleRemoveFromWishlist(item.id)}
                         className="p-2 -mt-2 -mr-2 hover:bg-accent rounded-full transition-colors"
                       >
                         <Heart className="w-5 h-5 fill-red-500 text-red-500" />

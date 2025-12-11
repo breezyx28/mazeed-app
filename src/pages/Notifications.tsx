@@ -9,9 +9,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 const Notifications = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, loadMore, hasMore } = useNotifications();
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all');
   const [filterDate, setFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
@@ -43,12 +45,12 @@ const Notifications = () => {
             <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-accent rounded-full transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold">Notifications</h1>
+            <h1 className="text-xl font-bold">{t('notifications')}</h1>
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-primary text-xs">
-                Mark all read
+                {t('markAllRead')}
               </Button>
             )}
             <Sheet>
@@ -59,67 +61,67 @@ const Notifications = () => {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Filter Notifications</SheetTitle>
+                  <SheetTitle>{t('filterNotifications')}</SheetTitle>
                 </SheetHeader>
                 <div className="py-6 space-y-6">
                   {/* Type Filter */}
                   <div className="space-y-3">
-                    <Label>Type</Label>
+                    <Label>{t('type')}</Label>
                     <RadioGroup value={filterType} onValueChange={(v) => setFilterType(v as any)}>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="all" id="type-all" />
-                        <Label htmlFor="type-all">All</Label>
+                        <Label htmlFor="type-all">{t('all')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="success" id="type-success" />
-                        <Label htmlFor="type-success">Success</Label>
+                        <Label htmlFor="type-success">{t('success')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="alert" id="type-alert" />
-                        <Label htmlFor="type-alert">Alert</Label>
+                        <Label htmlFor="type-alert">{t('alert')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="failure" id="type-failure" />
-                        <Label htmlFor="type-failure">Failure</Label>
+                        <Label htmlFor="type-failure">{t('failure')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="admin" id="type-admin" />
-                        <Label htmlFor="type-admin">Admin</Label>
+                        <Label htmlFor="type-admin">{t('admin')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="system" id="type-system" />
-                        <Label htmlFor="type-system">System</Label>
+                        <Label htmlFor="type-system">{t('system')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="delivery" id="type-delivery" />
-                        <Label htmlFor="type-delivery">Delivery</Label>
+                        <Label htmlFor="type-delivery">{t('delivery')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="coupon_expired" id="type-coupon" />
-                        <Label htmlFor="type-coupon">Coupon Expired</Label>
+                        <Label htmlFor="type-coupon">{t('couponExpired')}</Label>
                       </div>
                     </RadioGroup>
                   </div>
 
                   {/* Date Filter */}
                   <div className="space-y-3">
-                    <Label>Date</Label>
+                    <Label>{t('date')}</Label>
                     <RadioGroup value={filterDate} onValueChange={(v) => setFilterDate(v as any)}>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="all" id="date-all" />
-                        <Label htmlFor="date-all">Any time</Label>
+                        <Label htmlFor="date-all">{t('anyTime')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="today" id="date-today" />
-                        <Label htmlFor="date-today">Today</Label>
+                        <Label htmlFor="date-today">{t('today')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="week" id="date-week" />
-                        <Label htmlFor="date-week">Last 7 days</Label>
+                        <Label htmlFor="date-week">{t('last7Days')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="month" id="date-month" />
-                        <Label htmlFor="date-month">Last 30 days</Label>
+                        <Label htmlFor="date-month">{t('last30Days')}</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -134,7 +136,7 @@ const Notifications = () => {
         <div className="space-y-3">
           {filteredNotifications.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              No notifications found
+              {t('noNotificationsFound')}
             </div>
           ) : (
             filteredNotifications.map((notification) => {
@@ -181,7 +183,7 @@ const Notifications = () => {
               className="w-full mt-4 rounded-full"
               onClick={loadMore}
             >
-              Load More
+              {t('loadMore')}
             </Button>
           )}
         </div>

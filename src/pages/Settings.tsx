@@ -16,7 +16,7 @@ const Settings = () => {
   const { addNotification } = useNotifications();
 
   const handleLanguageChange = () => {
-    const newLang = settings.language === 'ar' ? 'en' : 'ar';
+    const newLang = settings.language === "ar" ? "en" : "ar";
     updateSettings({ language: newLang });
   };
 
@@ -24,85 +24,110 @@ const Settings = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-accent rounded-full transition-colors">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 hover:bg-accent rounded-full transition-colors"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Settings</h1>
+          <h1 className="text-xl font-bold">{t("settings")}</h1>
         </div>
       </header>
 
       <div className="max-w-md mx-auto px-4 py-6">
         {/* Notifications */}
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">NOTIFICATIONS</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
+            {t("notifications").toUpperCase()}
+          </h2>
           <div className="bg-card rounded-2xl p-4 space-y-4 border border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Bell className="w-5 h-5" />
                 </div>
-                <Label htmlFor="notifications" className="font-medium cursor-pointer">
-                  Allow Mobile Notifications
+                <Label
+                  htmlFor="notifications"
+                  className="font-medium cursor-pointer"
+                >
+                  {t("allowMobileNotifications")}
                 </Label>
               </div>
               <Switch
                 id="notifications"
                 checked={settings.notifications}
-                onCheckedChange={(checked) => updateSettings({ notifications: checked })}
+                onCheckedChange={(checked) =>
+                  updateSettings({ notifications: checked })
+                }
               />
             </div>
-            
+
             {settings.notifications && (
               <>
                 <div className="flex items-center justify-between pl-13">
-                  <Label htmlFor="email-notif" className="text-sm cursor-pointer">
-                    Email Notifications
+                  <Label
+                    htmlFor="email-notif"
+                    className="text-sm cursor-pointer"
+                  >
+                    {t("emailNotifications")}
                   </Label>
                   <Switch
                     id="email-notif"
                     checked={settings.emailNotifications}
-                    onCheckedChange={(checked) => updateSettings({ emailNotifications: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ emailNotifications: checked })
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between pl-13">
-                  <Label htmlFor="push-notif" className="text-sm cursor-pointer">
-                    Push Notifications
+                  <Label
+                    htmlFor="push-notif"
+                    className="text-sm cursor-pointer"
+                  >
+                    {t("pushNotifications")}
                   </Label>
                   <Switch
                     id="push-notif"
                     checked={settings.pushNotifications}
-                    onCheckedChange={(checked) => updateSettings({ pushNotifications: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ pushNotifications: checked })
+                    }
                   />
                 </div>
               </>
             )}
-            
-            <Button 
-              variant="outline" 
-              onClick={() => addNotification({
-                type: 'alert',
-                title: 'Test Notification',
-                message: 'This is a test notification to verify sound and badge functionality.',
-              })}
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                addNotification({
+                  type: "alert",
+                  title: t("testNotification"),
+                  message: t("testNotificationMessage"),
+                })
+              }
               className="w-full mt-2"
             >
-              Test Notification Sound
+              {t("testNotificationSound")}
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               onClick={async () => {
                 if (CapacitorUtils.isNative()) {
                   await CapacitorUtils.requestNotificationPermissions();
-                  await CapacitorUtils.scheduleLocalNotification('Test Local Notification', 'This is a test local notification!');
+                  await CapacitorUtils.scheduleLocalNotification(
+                    t("testLocalNotificationTitle"),
+                    t("testLocalNotificationMessage")
+                  );
                 } else {
                   // Web notification
-                  if ('Notification' in window) {
+                  if ("Notification" in window) {
                     const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                      new Notification('Test Local Notification', {
-                        body: 'This is a test local notification!',
-                        icon: '/favicon.ico'
+                    if (permission === "granted") {
+                      new Notification(t("testLocalNotificationTitle"), {
+                        body: t("testLocalNotificationMessage"),
+                        icon: "/favicon.ico",
                       });
                     }
                   }
@@ -110,14 +135,16 @@ const Settings = () => {
               }}
               className="w-full mt-2"
             >
-              Test Local Notification
+              {t("testLocalNotification")}
             </Button>
           </div>
         </div>
 
         {/* Security */}
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">SECURITY</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
+            {t("security")}
+          </h2>
           <div className="bg-card rounded-2xl p-4 space-y-4 border border-border">
             {isBiometricAvailable && (
               <>
@@ -127,10 +154,15 @@ const Settings = () => {
                       <Fingerprint className="w-5 h-5" />
                     </div>
                     <div>
-                      <Label htmlFor="biometric" className="font-medium cursor-pointer">
-                        Fingerprint Authentication
+                      <Label
+                        htmlFor="biometric"
+                        className="font-medium cursor-pointer"
+                      >
+                        {t("fingerprintAuthentication")}
                       </Label>
-                      <p className="text-xs text-muted-foreground">Use fingerprint to login securely</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("useFingerprintLogin")}
+                      </p>
                     </div>
                   </div>
                   <Switch
@@ -139,68 +171,70 @@ const Settings = () => {
                     onCheckedChange={async (checked) => {
                       if (checked) {
                         const success = await CapacitorUtils.verifyIdentity({
-                          reason: "Enable fingerprint authentication",
-                          title: "Enable Biometric",
-                          subtitle: "Confirm your identity",
-                          description: "Enable fingerprint authentication"
+                          reason: t("enableFingerprint"),
+                          title: t("enableBiometric"),
+                          subtitle: t("confirmYourIdentityEnable"),
+                          description: t("enableFingerprintAuth"),
                         });
                         if (success) {
                           updateSettings({ biometric: checked });
-                          toast.success("Fingerprint authentication enabled");
+                          toast.success(t("fingerprintEnabled"));
                         }
                       } else {
                         updateSettings({ biometric: checked });
-                        toast.success("Fingerprint authentication disabled");
+                        toast.success(t("fingerprintDisabled"));
                       }
                     }}
                   />
                 </div>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   onClick={async () => {
                     const success = await CapacitorUtils.verifyIdentity({
-                        reason: "Test fingerprint",
-                        title: "Test Biometric",
-                        subtitle: "Confirm your identity",
-                        description: "Test fingerprint"
+                      reason: t("testFingerprintReason"),
+                      title: t("testBiometricTitle"),
+                      subtitle: t("confirmYourIdentityEnable"),
+                      description: t("testFingerprintReason"),
                     });
                     if (success) {
-                      toast.success("Fingerprint verified successfully");
+                      toast.success(t("fingerprintVerifiedSuccess"));
                     } else {
-                      toast.error("Fingerprint verification failed");
+                      toast.error(t("fingerprintVerificationFailed"));
                     }
                   }}
                   className="w-full"
                 >
-                  Test Fingerprint
+                  {t("testFingerprint")}
                 </Button>
               </>
             )}
-            
+
             <button className="flex items-center gap-3 w-full hover:opacity-70 transition-opacity">
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                 <Lock className="w-5 h-5" />
               </div>
-              <span className="font-medium">Change Password</span>
+              <span className="font-medium">{t("changePassword")}</span>
             </button>
           </div>
         </div>
 
         {/* General */}
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">GENERAL</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
+            {t("general")}
+          </h2>
           <div className="bg-card rounded-2xl p-4 border border-border">
-            <button 
+            <button
               onClick={handleLanguageChange}
               className="flex items-center gap-3 w-full hover:opacity-70 transition-opacity"
             >
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                 <Globe className="w-5 h-5" />
               </div>
-              <span className="font-medium">Language</span>
+              <span className="font-medium">{t("language")}</span>
               <span className="ml-auto text-sm text-muted-foreground">
-                {settings.language === 'ar' ? 'العربية' : 'English'}
+                {settings.language === "ar" ? "العربية" : "English"}
               </span>
             </button>
           </div>
@@ -208,16 +242,27 @@ const Settings = () => {
 
         {/* About */}
         <div className="space-y-2 px-1">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground">
-            Privacy Policy
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground"
+          >
+            {t("privacyPolicy")}
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground">
-            Terms of Service
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground"
+          >
+            {t("termsOfService")}
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground">
-            About App
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground"
+          >
+            {t("aboutApp")}
           </Button>
-          <p className="text-center text-sm text-muted-foreground pt-4">Version 1.0.0</p>
+          <p className="text-center text-sm text-muted-foreground pt-4">
+            {t("version")} 1.0.0
+          </p>
         </div>
       </div>
     </div>

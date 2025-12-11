@@ -1,7 +1,7 @@
-import { Heart } from "lucide-react";
 import { Product } from "@/data/products";
 import { Link } from "react-router-dom";
 import { ProductBadge } from "./ProductBadge";
+import { WishlistButton } from "./WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -26,9 +26,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             alt={product.name}
             className="w-full h-full object-cover"
           />
-          <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors">
-            <Heart className="w-4 h-4" />
-          </button>
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors">
+            <WishlistButton productId={product.id} size="sm" className="p-1" />
+          </div>
           {product.discount && (
             <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
               -{product.discount}%

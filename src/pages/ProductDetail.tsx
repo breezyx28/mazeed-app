@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { products } from "@/data/products";
-import { ArrowLeft, Heart, ShoppingCart, Star, Check, Share2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Check, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ProductBadge } from "@/components/ProductBadge";
 import { CapacitorUtils } from "@/lib/capacitor-utils";
+import { WishlistButton } from "@/components/WishlistButton";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -96,9 +97,7 @@ const ProductDetail = () => {
             >
               <Share2 className="w-6 h-6" />
             </button>
-            <button className="p-2 hover:bg-accent rounded-full transition-colors">
-              <Heart className="w-6 h-6" />
-            </button>
+            <WishlistButton productId={product.id} />
           </div>
         </div>
       </header>
