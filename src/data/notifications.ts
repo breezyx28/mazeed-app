@@ -1,6 +1,6 @@
 import { Package, Tag, TrendingUp, AlertCircle, CheckCircle, XCircle, Info, Truck, ShieldAlert } from "lucide-react";
 
-export type NotificationType = 'success' | 'alert' | 'failure' | 'admin' | 'system' | 'delivery' | 'coupon_expired';
+export type NotificationType = 'success' | 'alert' | 'failure' | 'admin' | 'system' | 'delivery' | 'coupon_expired' | 'order';
 
 export interface Notification {
   id: string;
@@ -87,6 +87,7 @@ export const getNotificationIcon = (type: NotificationType) => {
     case 'system': return Info;
     case 'delivery': return Truck;
     case 'coupon_expired': return Tag;
+    case 'order': return Package;
     default: return Info;
   }
 };
@@ -100,6 +101,7 @@ export const getNotificationColor = (type: NotificationType) => {
     case 'system': return 'bg-blue-500/10 text-blue-500';
     case 'delivery': return 'bg-orange-500/10 text-orange-500';
     case 'coupon_expired': return 'bg-gray-500/10 text-gray-500';
+    case 'order': return 'bg-purple-500/10 text-purple-600';
     default: return 'bg-muted text-muted-foreground';
   }
 };
@@ -113,6 +115,7 @@ export const getNotificationEmoji = (type: NotificationType) => {
     case 'system': return 'ℹ️';
     case 'delivery': return '🚚';
     case 'coupon_expired': return '🎫';
+    case 'order': return '🛍️';
     default: return '📢';
   }
 };

@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowLeft, Bell, CreditCard, Heart, MapPin, Settings, ShoppingBag, User, Camera, AlertCircle, Store } from "lucide-react";
+import { ArrowRight, ArrowLeft, Bell, CreditCard, Heart, MapPin, Settings, ShoppingBag, User, Camera, AlertCircle, Store, Sparkles, LayoutDashboard, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -161,49 +161,113 @@ const Profile = () => {
         </div>
         
         {/* Seller Section */}
-        <div className="mt-6 mb-2">
+        <div className="mt-8 mb-6">
            {!profile.is_seller ? (
-             <Button 
-               onClick={() => navigate('/seller/onboarding')} 
-               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white h-12 rounded-xl shadow-md hover:shadow-lg transition-all"
+             <motion.div
+               whileHover={{ scale: 1.02, translateY: -2 }}
+               whileTap={{ scale: 0.98 }}
+               className="relative overflow-hidden rounded-[24px] group cursor-pointer"
+               onClick={() => navigate('/seller/onboarding')}
              >
-                <div className="flex items-center gap-2">
-                   <Store className="w-5 h-5" />
-                   <span>{t('becomeASeller')}</span>
-                </div>
-             </Button>
-           ) : (
-             <div className="bg-card rounded-xl p-4 border border-border">
-                <div className="flex items-center justify-between mb-3">
-                   <div className="flex items-center gap-2">
-                      <Store className="w-5 h-5 text-primary" />
-                      <span className="font-semibold">{sellerProfile?.shop_name || t('myShop')}</span>
+               {/* Background Glow/Gradient */}
+               <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 transition-all duration-500 group-hover:scale-110" />
+               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.4),transparent_70%)]" />
+               
+               <div className="relative p-6 flex items-center justify-between gap-4">
+                 <div className="flex-1">
+                   <div className="flex items-center gap-2 mb-1">
+                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                       <Sparkles className="w-4 h-4 text-white" />
+                     </div>
+                     <span className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Partner Program</span>
                    </div>
-                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                     sellerProfile?.status === 'active' ? 'bg-green-100 text-green-700' : 
-                     sellerProfile?.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                     'bg-yellow-100 text-yellow-700'
-                   }`}>
-                      {sellerProfile?.status ? (
-                         // We might want to translate status enum values later, but for now just display them or map them
-                         sellerProfile?.status === 'pending' ? t('sellerVerificationPending') : sellerProfile?.status
-                      ) : t('sellerVerificationPending')}
-                   </span>
-                </div>
-                
-                {sellerProfile?.status === 'active' ? (
-                   <Button 
-                     onClick={() => navigate('/seller/dashboard')} 
-                     className="w-full"
-                     variant="outline"
-                   >
-                      {t('switchToSellerView')}
-                   </Button>
-                ) : (
-                   <p className="text-xs text-muted-foreground text-center">
-                     {t('sellerProfileUnderReview')}
+                   <h3 className="text-white text-xl font-black tracking-tight leading-none mb-1">
+                     {t('becomeASeller')}
+                   </h3>
+                   <p className="text-white/70 text-xs font-medium max-w-[180px]">
+                     {isRTL ? 'ابدأ بيع منتجاتك والوصول لملايين العملاء' : 'Start selling and reach millions of customers'}
                    </p>
-                )}
+                 </div>
+                 
+                 <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl transition-transform duration-500 group-hover:rotate-12">
+                   <Store className="w-7 h-7 text-white" />
+                 </div>
+               </div>
+               
+               {/* Bottom Shine */}
+               <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+             </motion.div>
+           ) : (
+             <div className="space-y-4">
+                {/* Active Seller Premium Card */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative overflow-hidden rounded-[32px] bg-black dark:bg-zinc-900 border border-zinc-800 p-1 group shadow-2xl"
+                >
+                  <div className="bg-gradient-to-br from-zinc-800 to-zinc-950 rounded-[31px] p-6 relative overflow-hidden">
+                    {/* Animated Decorative Rings */}
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-700" />
+
+                    <div className="relative flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-purple-400 p-[2px]">
+                            <div className="w-full h-full rounded-[14px] bg-zinc-900 flex items-center justify-center overflow-hidden">
+                              {sellerProfile?.logo_url ? (
+                                <img src={sellerProfile.logo_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <Store className="w-8 h-8 text-primary" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-zinc-900 flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-white font-black text-lg tracking-tight leading-none mb-1">
+                            {sellerProfile?.shop_name || t('myShop')}
+                          </h4>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+                              {sellerProfile?.status || 'Active'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end">
+                        <div className="text-2xl font-black text-white tracking-tighter">12.5k</div>
+                        <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">{t('totalSales')}</div>
+                      </div>
+                    </div>
+
+                    {sellerProfile?.status === 'active' ? (
+                      <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => navigate('/seller/dashboard')} 
+                        className="w-full h-14 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 relative group overflow-hidden"
+                      >
+                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-200 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                         <LayoutDashboard className="w-5 h-5" />
+                         <span>{t('switchToSellerView')}</span>
+                         <Zap className="w-4 h-4 fill-black text-black" />
+                      </motion.button>
+                    ) : (
+                      <div className="bg-zinc-900/50 backdrop-blur-md rounded-2xl p-4 border border-zinc-800/50">
+                        <p className="text-xs text-zinc-400 text-center font-medium leading-relaxed">
+                          <AlertCircle className="w-4 h-4 mx-auto mb-2 text-yellow-500" />
+                          {t('sellerProfileUnderReview')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
              </div>
            )}
         </div>

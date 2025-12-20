@@ -82,13 +82,10 @@ const resources = {
       selectLocation: 'اختر الموقع',
       confirmLocation: 'تأكيد الموقع',
       searchLocation: 'البحث عن موقع...',
-      // Profile page
       edit: 'تعديل',
-      // Edit Profile page
       editProfileTitle: 'تعديل الملف الشخصي',
       saveChanges: 'حفظ التغييرات',
       profileUpdated: 'تم تحديث الملف الشخصي بنجاح!',
-      // Shipping Address page
       shippingAddressTitle: 'عنوان الشحن',
       homeAddress: 'المنزل',
       officeAddress: 'المكتب',
@@ -102,7 +99,6 @@ const resources = {
       addAddress: 'إضافة عنوان',
       addressAdded: 'تم إضافة العنوان بنجاح!',
       defaultAddressUpdated: 'تم تحديث العنوان الافتراضي!',
-      // Payment Methods page
       paymentMethodsTitle: 'طرق الدفع',
       addNewCard: 'إضافة بطاقة جديدة',
       addNewCardTitle: 'إضافة بطاقة جديدة',
@@ -114,14 +110,11 @@ const resources = {
       addCard: 'إضافة بطاقة',
       cardAdded: 'تم إضافة البطاقة بنجاح!',
       defaultPaymentUpdated: 'تم تحديث طريقة الدفع الافتراضية!',
-      // Map
       clickToSelectLocation: 'انقر لاختيار الموقع',
       riyadhSaudiArabia: 'الرياض، المملكة العربية السعودية',
-      // Orders
       myOrdersTitle: 'طلباتي',
       trackOrder: 'تتبع الطلب',
       totalAmount: 'المبلغ الإجمالي',
-      // Wishlist
       wishlistTitle: 'قائمة المفضلة',
       items: 'عنصر',
       wishlistEmpty: 'قائمة المفضلة فارغة',
@@ -130,7 +123,6 @@ const resources = {
       removedFromWishlist: 'تم إزالته من المفضلة',
       addedToWishlist: 'تم إضافته للمفضلة',
       addedToCart: 'تم إضافته إلى السلة',
-      // Categories and Offers
       categories: 'الفئات',
       offers: 'العروض',
       reels: 'ريلز',
@@ -139,7 +131,6 @@ const resources = {
       noVideosYet: 'لا توجد فيديوهات بعد',
       noVideosDescription: 'سيتم عرض فيديوهات المنتجات هنا قريباً',
       backToHome: 'العودة للرئيسية',
-      // Login page
       biometricNotAvailableNative: 'المصادقة البيومترية متاحة فقط على الأجهزة الأصلية',
       fingerprintNotAvailable: 'مصادقة البصمة غير متاحة على هذا الجهاز',
       authenticateToLogin: 'المصادقة لتسجيل الدخول',
@@ -158,11 +149,9 @@ const resources = {
       loggingIn: 'جاري تسجيل الدخول...',
       useFingerprint: 'استخدام البصمة',
       testBiometricButton: 'اختبار البيومترية',
-      // Register page
       signupError: 'حدث خطأ في إنشاء الحساب',
       creatingAccount: 'جاري إنشاء الحساب...',
       and: 'و',
-      // Notifications
       markAllRead: 'تحديد الكل كمقروء',
       filterNotifications: 'تصفية الإشعارات',
       type: 'النوع',
@@ -183,7 +172,6 @@ const resources = {
       loading: 'جاري التحميل...',
       cartEmpty: 'سلتك فارغة',
       startShopping: 'ابدأ التسوق',
-      // Settings
       allowMobileNotifications: 'السماح بإشعارات الهاتف المحمول',
       emailNotifications: 'إشعارات البريد الإلكتروني',
       pushNotifications: 'الإشعارات الفورية',
@@ -210,7 +198,6 @@ const resources = {
       testBiometricTitle: 'اختبار البيومترية',
       fingerprintVerifiedSuccess: 'تم التحقق من البصمة بنجاح',
       fingerprintVerificationFailed: 'فشل التحقق من البصمة',
-       // Seller
       dashboard: 'لوحة التحكم',
       orders: 'الطلبات',
       becomeASeller: 'أصبح بائعاً',
@@ -218,8 +205,6 @@ const resources = {
       switchToSellerView: 'التبديل إلى عرض البائع',
       sellerProfileUnderReview: 'حساب البائع الخاص بك قيد المراجعة حالياً.',
       myShop: 'متجري',
-      
-      // Seller Onboarding
       becomeASellerTitle: 'أصبح بائعاً',
       becomeASellerSubtitle: 'ابدأ رحلة البيع الخاصة بك على متجر مزيد اليوم.',
       shopName: 'اسم المتجر',
@@ -235,8 +220,6 @@ const resources = {
       submitting: 'جاري التقديم...',
       cancel: 'إلغاء',
       applicationSubmitted: 'تم تقديم طلب البائع الخاص بك!',
-
-      // Seller Dashboard
       sellerDashboard: 'لوحة تحكم البائع',
       backToProfile: 'العودة للملف الشخصي',
       totalSales: 'إجمالي المبيعات',
@@ -249,7 +232,6 @@ const resources = {
       continueAsSeller: 'المتابعة كبائع',
       customer: 'عميل',
       seller: 'بائع',
-      // Create Offer
       createOffer: 'إنشاء عرض جديد',
       offerName: 'اسم العرض',
       offerNamePlaceholder: 'مثال: تخفيضات الصيف',
@@ -272,7 +254,6 @@ const resources = {
       offerCreated: 'تم إنشاء العرض!',
       error: 'خطأ',
       productsUpdated: 'منتجات تم تحديثها.',
-      // Product Editor
       editProduct: 'تعديل المنتج',
       productName: 'اسم المنتج',
       priceSDG: 'السعر (ج.س)',
@@ -313,26 +294,33 @@ const resources = {
       notDeliverableMessage: 'هذا المنتج غير قابل للتوصيل حالياً. يمكنك التوجه إلى المتجر لاستلامه بنفسك.',
       viewInMap: 'عرض الموقع على الخريطة',
       visitStore: 'زيارة المتجر',
-
-       // Reporting
-       reportProduct: 'الإبلاغ عن مشكلة في المنتج',
-       reportedStatus: 'ما هي المشكلة؟',
-       reportedStatusDesc: 'ساعدنا والمتجر في الحفاظ على دقة المعلومات.',
-       reportSuccess: 'تم إرسال الإبلاغ بنجاح. شكراً لك.',
-       reportError: 'فشل إرسال الإبلاغ. يرجى المحاولة لاحقاً.',
-       reportOutofStock: 'نفذ من المخزون',
-       reportDiscontinued: 'المنتج متوقف',
-       reportTemporarilyUnavailable: 'غير متوفر مؤقتاً',
-       reportWrongInfo: 'معلومات / سعر خاطئ',
-       reportReasonPlaceholder: 'اختياري: أخبرنا المزيد عن المشكلة...',
-       reportSubmit: 'إرسال الإبلاغ',
-       reportAlreadyReported: 'لقد قمت بالإبلاغ عن هذا المنتج مسبقاً مؤخراً.',
-       reportDailyLimit: 'لقد وصلت للحد اليومي من الإبلاغات.',
-       isSomethingWrong: 'هل هناك شيء غير صحيح؟',
-       reportHelpDesc: 'ساعدنا في الحفاظ على دقة المعلومات من خلال الإبلاغ عن مشاكل المنتج.',
-      // Orders
+      reportProduct: 'الإبلاغ عن مشكلة في المنتج',
+      reportedStatus: 'ما هي المشكلة؟',
+      reportedStatusDesc: 'ساعدنا والمتجر في الحفاظ على دقة المعلومات.',
+      reportSuccess: 'تم إرسال الإبلاغ بنجاح. شكراً لك.',
+      reportError: 'فشل إرسال الإبلاغ. يرجى المحاولة لاحقاً.',
+      reportOutofStock: 'نفذ من المخزون',
+      reportDiscontinued: 'المنتج متوقف',
+      reportTemporarilyUnavailable: 'غير متوفر مؤقتاً',
+      reportWrongInfo: 'معلومات / سعر خاطئ',
+      reportReasonPlaceholder: 'اختياري: أخبرنا المزيد عن المشكلة...',
+      reportSubmit: 'إرسال الإبلاغ',
+      reportAlreadyReported: 'لقد قمت بالإبلاغ عن هذا المنتج مسبقاً مؤخراً.',
+      reportDailyLimit: 'لقد وصلت للحد اليومي من الإبلاغات.',
+      isSomethingWrong: 'هل هناك شيء غير صحيح؟',
+      reportHelpDesc: 'ساعدنا في الحفاظ على دقة المعلومات من خلال الإبلاغ عن مشاكل المنتج.',
+      sales: 'المبيعات',
+      salesGrowth: 'نما بنسبة {{value}}% عن الشهر الماضي',
+      orders: 'الطلبات',
+      ordersGrowth: '{{value}} طلب جديد اليوم',
+      revenue: 'الأرباح',
+      revenueGrowth: 'نما بنسبة {{value}}% هذا الأسبوع',
+      storePerformance: 'أداء المتجر',
+      manageBusiness: 'إدارة أعمالك',
+      viewMyShop: 'عرض متجري',
+      last30Days: 'آخر 30 يوم',
+      pendingAction: 'بانتظار الإجراء',
       ordersManagementSoon: 'إدارة الطلبات قريباً.',
-      // Store Settings
       locationOnMap: 'الموقع على الخريطة (انقر للاختيار)',
       selectedCoordinates: 'الإحداثيات المحددة (خط العرض، خط الطول)',
       socialMediaLinks: 'روابط وسائل التواصل الاجتماعي',
@@ -343,7 +331,6 @@ const resources = {
       addMaterial: 'إضافة خامة',
       enterSize: 'أدخل المقاس (مثال: S, M, L, XL)',
       enterMaterial: 'أدخل الخامة (مثال: قطن، جلد)',
-      // Products List
       delete: 'حذف',
       noProductsYet: 'لا توجد منتجات بعد.',
       createFirstProduct: 'إنشاء أول منتج',
@@ -476,13 +463,10 @@ const resources = {
       selectLocation: 'Select Location',
       confirmLocation: 'Confirm Location',
       searchLocation: 'Search location...',
-      // Profile page
       edit: 'Edit',
-      // Edit Profile page
       editProfileTitle: 'Edit Profile',
       saveChanges: 'Save Changes',
       profileUpdated: 'Profile updated successfully!',
-      // Shipping Address page
       shippingAddressTitle: 'Shipping Address',
       homeAddress: 'Home',
       officeAddress: 'Office',
@@ -496,7 +480,6 @@ const resources = {
       addAddress: 'Add Address',
       addressAdded: 'Address added successfully!',
       defaultAddressUpdated: 'Default address updated!',
-      // Payment Methods page
       paymentMethodsTitle: 'Payment Methods',
       addNewCard: 'Add New Card',
       addNewCardTitle: 'Add New Card',
@@ -508,14 +491,11 @@ const resources = {
       addCard: 'Add Card',
       cardAdded: 'Card added successfully!',
       defaultPaymentUpdated: 'Default payment method updated!',
-      // Map
       clickToSelectLocation: 'Click to select location',
       riyadhSaudiArabia: 'Riyadh, Saudi Arabia',
-      // Orders
       myOrdersTitle: 'My Orders',
       trackOrder: 'Track Order',
       totalAmount: 'Total Amount',
-      // Wishlist
       wishlistTitle: 'Wishlist',
       items: 'items',
       wishlistEmpty: 'Your wishlist is empty',
@@ -524,7 +504,6 @@ const resources = {
       removedFromWishlist: 'Removed from wishlist',
       addedToWishlist: 'Added to wishlist',
       addedToCart: 'Added to cart',
-      // Categories and Offers
       categories: 'Categories',
       offers: 'Offers',
       reels: 'Reels',
@@ -533,7 +512,6 @@ const resources = {
       noVideosYet: 'No Videos Yet',
       noVideosDescription: 'Product videos will appear here soon',
       backToHome: 'Back to Home',
-      // Login page
       biometricNotAvailableNative: 'Biometric authentication is only available on native devices',
       fingerprintNotAvailable: 'Fingerprint authentication is not available on this device',
       authenticateToLogin: 'Authenticate to login',
@@ -552,11 +530,9 @@ const resources = {
       loggingIn: 'Logging in...',
       useFingerprint: 'Use Fingerprint',
       testBiometricButton: 'Test Biometric',
-      // Register page
       signupError: 'An error occurred during signup',
       creatingAccount: 'Creating account...',
       and: 'and',
-      // Notifications
       markAllRead: 'Mark all read',
       filterNotifications: 'Filter Notifications',
       type: 'Type',
@@ -574,7 +550,8 @@ const resources = {
       couponExpired: 'Coupon Expired',
       noNotificationsFound: 'No notifications found',
       loadMore: 'Load More',
-      // Settings
+      cartEmpty: 'Your cart is empty',
+      startShopping: 'Start Shopping',
       allowMobileNotifications: 'Allow Mobile Notifications',
       emailNotifications: 'Email Notifications',
       pushNotifications: 'Push Notifications',
@@ -601,7 +578,6 @@ const resources = {
       testBiometricTitle: 'Test Biometric',
       fingerprintVerifiedSuccess: 'Fingerprint verified successfully',
       fingerprintVerificationFailed: 'Fingerprint verification failed',
-      // Seller
       dashboard: 'Dashboard',
       orders: 'Orders',
       becomeASeller: 'Become a Seller',
@@ -609,8 +585,6 @@ const resources = {
       switchToSellerView: 'Switch to Seller View',
       sellerProfileUnderReview: 'Your seller account is currently under review.',
       myShop: 'My Shop',
-      
-      // Seller Onboarding
       becomeASellerTitle: 'Become a Seller',
       becomeASellerSubtitle: 'Start your selling journey on Mazeed Store today.',
       shopName: 'Shop Name',
@@ -631,25 +605,32 @@ const resources = {
       notDeliverableMessage: 'This product is currently not deliverable. You must visit the store to pick it up.',
       viewInMap: 'View Location in Map',
       visitStore: 'Visit Store',
-       
-       // Reporting
-       reportProduct: 'Report Product Issue',
-       reportedStatus: 'What is the issue?',
-       reportedStatusDesc: 'Help us and the seller keep information accurate.',
-       reportSuccess: 'Report submitted successfully. Thank you for your feedback.',
-       reportError: 'Failed to submit report. Please try again later.',
-       reportOutofStock: 'Out of Stock',
-       reportDiscontinued: 'Discontinued',
-       reportTemporarilyUnavailable: 'Temporarily Unavailable',
-       reportWrongInfo: 'Wrong Information / Price',
-       reportReasonPlaceholder: 'Optional: tell us more about the issue...',
-       reportSubmit: 'Submit Report',
-       reportAlreadyReported: 'You have already reported this product recently.',
-       reportDailyLimit: 'You have reached your daily reporting limit.',
-       isSomethingWrong: 'Something not right?',
-       reportHelpDesc: 'Help us keep the marketplace accurate by reporting product issues.',
-      
-      // Seller Dashboard
+      reportProduct: 'Report Product Issue',
+      reportedStatus: 'What is the issue?',
+      reportedStatusDesc: 'Help us and the seller keep information accurate.',
+      reportSuccess: 'Report submitted successfully. Thank you for your feedback.',
+      reportError: 'Failed to submit report. Please try again later.',
+      reportOutofStock: 'Out of Stock',
+      reportDiscontinued: 'Discontinued',
+      reportTemporarilyUnavailable: 'Temporarily Unavailable',
+      reportWrongInfo: 'Wrong Information / Price',
+      reportReasonPlaceholder: 'Optional: tell us more about the issue...',
+      reportSubmit: 'Submit Report',
+      reportAlreadyReported: 'You have already reported this product recently.',
+      reportDailyLimit: 'You have reached your daily reporting limit.',
+      isSomethingWrong: 'Something not right?',
+      reportHelpDesc: 'Help us keep the marketplace accurate by reporting product issues.',
+      sales: 'Sales',
+      salesGrowth: '{{value}}% from last month',
+      orders: 'Orders',
+      ordersGrowth: '{{value}} new today',
+      revenue: 'Revenue',
+      revenueGrowth: '{{value}}% this week',
+      storePerformance: 'Store Performance',
+      manageBusiness: 'Manage your business',
+      viewMyShop: 'View My Shop',
+      last30Days: 'Last 30 days',
+      pendingAction: 'Pending Action',
       sellerDashboard: 'Seller Dashboard',
       backToProfile: 'Back to Profile',
       totalSales: 'Total Sales',
@@ -662,7 +643,6 @@ const resources = {
       continueAsSeller: 'Continue as Seller',
       customer: 'Customer',
       seller: 'Seller',
-      // Create Offer
       createOffer: 'Create New Offer',
       offerName: 'Offer Name',
       offerNamePlaceholder: 'e.g. Summer Blowout Sale',
@@ -685,7 +665,6 @@ const resources = {
       offerCreated: 'Offer Created!',
       error: 'Error',
       productsUpdated: 'products updated.',
-      // Product Editor
       editProduct: 'Edit Product',
       productName: 'Product Name',
       priceSDG: 'Price (SDG)',
@@ -721,9 +700,7 @@ const resources = {
       bestSeller: 'Best Seller',
       inStock: 'In Stock',
       limitedEdition: 'Limited Edition',
-      // Orders
       ordersManagementSoon: 'Orders management coming soon.',
-      // Store Settings
       locationOnMap: 'Location on Map (Click to select)',
       selectedCoordinates: 'Selected Coordinates (Lat, Lng)',
       socialMediaLinks: 'Social Media Links',
@@ -732,29 +709,28 @@ const resources = {
       materials: 'Materials',
       addSize: 'Add Size',
       addMaterial: 'Add Material',
-      enterSize: 'Enter size (e.g., S, M, L, XL)',
-      enterMaterial: 'Enter material (e.g., Cotton, Leather)',
-      // Products List
+      enterSize: 'Enter size (e.g. S, M, L, XL)',
+      enterMaterial: 'Enter material (e.g. Cotton, Leather)',
       delete: 'Delete',
       noProductsYet: 'No products yet.',
       createFirstProduct: 'Create your first product',
-      inStockLabel: 'in stock',
+      inStockLabel: 'In Stock',
       nearbyProducts: {
         title: 'Nearby You',
-        discoverTitle: 'Discover Nearby',
+        discoverTitle: 'Discover Nearby Products',
         discoverDesc: 'See what products are available in stores around you right now.',
         enableButton: 'Enable Location',
-        enableLocationTitle: 'Find Nearby Products',
-        enableLocationDesc: 'See products available in stores near your current location in Khartoum.',
+        enableLocationTitle: 'Find Local Products',
+        enableLocationDesc: 'See products available in physical stores near your current location in Khartoum.',
         benefit1Title: 'Faster Access',
         benefit1Desc: 'Find physical stores you can visit today.',
         benefit2Title: 'Easy Navigation',
-        benefit2Desc: 'Get precise walking directions to any store.',
+        benefit2Desc: 'Get precise walking directions to any shop.',
         privacyTitle: 'Your Privacy Matters',
-        privacyDesc: 'We only use your location while you are using the app.',
+        privacyDesc: 'We only use your location while using the app.',
         allowAccess: 'Allow Access',
-        noResults: 'No stores nearby',
-        noResultsDesc: 'Try expanding your search or checking another category.',
+        noResults: 'No nearby stores',
+        noResultsDesc: 'Try expanding your search or choosing another category.',
         navigate: 'Navigate to Store',
         walkingTime: 'Estimated Walking Time',
         openInMaps: 'Open in Maps',
@@ -771,7 +747,7 @@ const resources = {
         maybeLater: 'Maybe Later',
         all: 'All',
         viewAll: 'View All',
-        searching: 'Searching nearby...',
+        searching: 'Searching soon...',
         viewOnMap: 'View on Map'
       },
       filtersAndSort: 'Filters & Sort',
@@ -796,8 +772,6 @@ i18n
   .init({
     resources,
     fallbackLng: 'ar',
-    lng: 'ar',
-    debug: false,
     interpolation: {
       escapeValue: false,
     },

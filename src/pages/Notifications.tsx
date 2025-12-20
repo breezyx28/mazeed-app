@@ -149,7 +149,13 @@ const Notifications = () => {
               return (
                 <div
                   key={notification.id}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => {
+                    markAsRead(notification.id);
+                    const data = (notification as any).data;
+                    if (notification.type === 'order' || data?.type === 'order' || data?.order_id) {
+                      navigate(`/seller/orders${data?.order_id ? `?id=${data.order_id}` : ''}`);
+                    }
+                  }}
                   className={`bg-card rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-md ${
                     !notification.read
                       ? "border-primary/20 bg-primary/5"

@@ -1,5 +1,6 @@
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from './supabase';
 import { App } from '@capacitor/app';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -23,6 +24,75 @@ export class CapacitorUtils {
           grantOfflineAccess: true,
         }
       );
+    }
+  }
+
+  static async registerPushNotifications(userId: string) {
+    if (!this.isNative()) {
+      // Browser push notification logic can be complex without a service worker file,
+      // but we can at least request permission for local notifications/web push
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('Browser notification permission granted');
+          // In a real app, this is where we'd register a Service Worker for Web Push
+        }
+      }
+      return;
+    }
+
+    try {
+      // Reset badge count
+      await PushNotifications.removeAllDeliveredNotifications();
+
+      // Request permissions
+      const permission = await PushNotifications.requestPermissions();
+      if (permission.receive === 'granted') {
+        // Register with Apple / Google to receive push via APNS/FCM
+        await PushNotifications.register();
+      }
+
+      // On success, we should be able to receive notifications
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('Push registration success, token: ' + token.value);
+        
+        // Save token to Supabase
+        await supabase
+          .from('user_push_tokens')
+          .upsert({
+            user_id: userId,
+            token: token.value,
+            platform: Capacitor.getPlatform(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id, token' });
+      });
+
+      // Some errors occurred
+      PushNotifications.addListener('registrationError', (error: any) => {
+        console.error('Error on push registration: ' + JSON.stringify(error));
+      });
+
+      // Show the notification payload if the app is open
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Push received: ' + JSON.stringify(notification));
+        // We can show a local toast here or it might be handled by the OS
+      });
+
+      // Method called when tapping on a notification
+      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+        console.log('Push action performed: ' + JSON.stringify(notification));
+        const data = notification.notification.data;
+        
+        // Auto-navigate to seller orders if the notification is for an order
+        if (data?.type === 'order' || data?.order_id) {
+          const targetPath = `/seller/orders${data.order_id ? `?id=${data.order_id}` : ''}`;
+          console.log('Auto-navigating to:', targetPath);
+          window.location.href = targetPath; // Use window.location as fallback if navigate isn't available in this context
+        }
+      });
+
+    } catch (error) {
+      console.error('Error setting up push notifications:', error);
     }
   }
 

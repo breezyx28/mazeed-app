@@ -169,6 +169,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (session?.user) {
         await fetchProfile(session.user.id);
+        // Register for push notifications
+        CapacitorUtils.registerPushNotifications(session.user.id);
       }
       
       setIsLoading(false);
@@ -184,6 +186,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       setIsAuthenticated(!!session);
       setIsLoading(false);
+
+      if (session?.user) {
+        CapacitorUtils.registerPushNotifications(session.user.id);
+      }
 
       if (event === 'SIGNED_OUT') {
         setProfile(null);

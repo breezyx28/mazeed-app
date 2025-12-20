@@ -50,7 +50,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           title: n.title,
           message: n.message,
           date: n.created_at,
-          read: n.is_read
+          read: n.is_read,
+          data: n.data
         }));
 
         if (pageNum === 1) {
@@ -87,7 +88,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             title: newNotif.title,
             message: newNotif.message,
             date: newNotif.created_at,
-            read: newNotif.is_read
+            read: newNotif.is_read,
+            data: newNotif.data
           }, ...prev]);
           setTotalCount(prev => prev + 1);
           
