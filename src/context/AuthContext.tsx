@@ -11,6 +11,24 @@ interface Profile {
   phone_number: string | null;
   gender: string | null;
   age: number | null;
+  is_seller: boolean | null;
+}
+
+export interface SellerProfile {
+  id: string;
+  profile_id: string;
+  shop_name: string;
+  shop_slug: string;
+  description: string | null;
+  location: any | null;
+  opening_times: any | null;
+  website: string | null;
+  logo_url: string | null;
+  cover_url: string | null;
+  social_media: any | null;
+  settings: any | null;
+  is_verified: boolean;
+  status: 'pending' | 'active' | 'suspended' | 'rejected';
 }
 
 interface AuthContextType {
@@ -19,6 +37,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  sellerProfile: SellerProfile | null;
   isProfileComplete: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
@@ -35,6 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
   const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
   const [isFetchingProfile, setIsFetchingProfile] = useState<boolean>(false);
 
@@ -57,9 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             avatar_url: null,
             phone_number: null,
             gender: null,
-            age: null
+            age: null,
+            is_seller: false
           };
           setProfile(emptyProfile);
+          setSellerProfile(null);
           setIsProfileComplete(false);
           return emptyProfile;
         }
@@ -69,6 +91,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(data);
       const isComplete = !!(data.full_name && data.phone_number && data.gender && data.age);
       setIsProfileComplete(isComplete);
+
+      // Fetch seller profile if user is a seller
+      if (data.is_seller) {
+        const { data: sellerData, error: sellerError } = await supabase
+          .from('sellers')
+          .select('*')
+          .eq('profile_id', userId)
+          .single();
+        
+        if (!sellerError && sellerData) {
+          setSellerProfile(sellerData);
+        } else {
+          setSellerProfile(null);
+        }
+      } else {
+        setSellerProfile(null);
+      }
       
       return data;
     } catch (error: any) {
@@ -79,9 +118,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         avatar_url: null,
         phone_number: null,
         gender: null,
-        age: null
+        age: null,
+        is_seller: false
       };
       setProfile(emptyProfile);
+      setSellerProfile(null);
       setIsProfileComplete(false);
       return null;
     } finally {
@@ -145,6 +186,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (event === 'SIGNED_OUT') {
         setProfile(null);
+        setSellerProfile(null);
         setIsProfileComplete(false);
       }
     });
@@ -302,6 +344,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user, 
       session,
       profile,
+      sellerProfile,
       isProfileComplete,
       loginWithGoogle, 
       loginWithEmail,

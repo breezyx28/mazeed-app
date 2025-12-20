@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { products } from "@/data/products";
-import { ArrowLeft, ShoppingCart, Star, Check, Share2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Check, Share2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,12 +9,20 @@ import { toast } from "sonner";
 import { ProductBadge } from "@/components/ProductBadge";
 import { CapacitorUtils } from "@/lib/capacitor-utils";
 import { WishlistButton } from "@/components/WishlistButton";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const product = products.find(p => p.id === id);
+  const { user } = useAuth();
+  
+  // Try to find in mock data first, then handle DB products later
+  const mockProduct = products.find(p => p.id === id);
+  const [product, setProduct] = useState<any>(mockProduct);
+  const [loading, setLoading] = useState(!mockProduct);
+  
   const [selectedColor, setSelectedColor] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
@@ -22,9 +30,64 @@ const ProductDetail = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const productImages = product.images || [product.image];
+  // Track Interaction & Fetch DB Product if needed
+  useEffect(() => {
+    const initProduct = async () => {
+      let currentProduct = null;
+      
+      // 1. Try to find in mock data
+      const mock = products.find(p => p.id === id);
+      
+      // 2. If not in mock, fetch from Supabase
+      if (!mock && id) {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*, sellers(*)')
+          .eq('id', id)
+          .single();
+        
+        if (data) {
+          // Map DB keys to UI expected keys (camelCase or specific names)
+          currentProduct = {
+            ...data,
+            offerType: data.offer_type,
+            offerExpiry: data.offer_expiry,
+            originalPrice: data.original_price,
+            reviews: data.reviews_count || 0,
+            rating: data.rating || 5,
+            images: data.images || [data.image],
+            sellerId: data.seller_id,
+            badges: data.badges || []
+          };
+          setProduct(currentProduct);
+        }
+        setLoading(false);
+      } else if (mock) {
+        setProduct(mock);
+        currentProduct = mock;
+        setLoading(false);
+      }
+
+      // Record "view" interaction
+      if (user && currentProduct && (currentProduct.category_id || currentProduct.categoryId)) {
+        await supabase.rpc('increment_category_interaction', {
+          p_user_id: user.id,
+          p_category_id: currentProduct.category_id || currentProduct.categoryId,
+          p_type: 'view'
+        });
+      }
+    };
+
+    initProduct();
+    // Reset image index when product changes
+    setSelectedImageIndex(0);
+  }, [id, user]);
+
+  const productImages = product ? (product.images || [product.image]) : [];
 
   useEffect(() => {
+    if (!product) return;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
@@ -39,7 +102,7 @@ const ProductDetail = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, product]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ar-SD', {
@@ -51,6 +114,7 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
     setIsAdded(true);
     toast.success(`${product.name} تم إضافته للسلة`);
     setTimeout(() => setIsAdded(false), 2000);
@@ -62,6 +126,7 @@ const ProductDetail = () => {
   };
 
   const handleShare = async () => {
+    if (!product) return;
     const result = await CapacitorUtils.share({
       title: product.name,
       text: `${product.description || 'منتج رائع'} - بسعر ${formatPrice(product.price)}`,
@@ -74,8 +139,22 @@ const ProductDetail = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-muted-foreground">{t('common.loading', 'Loading product details...')}</p>
+      </div>
+    );
+  }
+
   if (!product) {
-    return <div>Product not found</div>;
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center gap-4">
+        <h2 className="text-xl font-bold">{t('errors.productNotFound', 'Product not found')}</h2>
+        <Button onClick={() => navigate(-1)}>{t('common.goBack', 'Go Back')}</Button>
+      </div>
+    );
   }
 
   return (
@@ -174,6 +253,18 @@ const ProductDetail = () => {
                 </motion.div>
               )}
             </div>
+            
+            {(product.sellers?.location || product.location) && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-full gap-2 border-primary text-primary hover:bg-primary/5"
+                onClick={() => navigate(`/navigate/${product.id}`, { state: { product } })}
+              >
+                <MapPin className="w-4 h-4" />
+                {t('nearbyProducts.navigate', 'Navigate')}
+              </Button>
+            )}
           </div>
 
           {/* Description */}

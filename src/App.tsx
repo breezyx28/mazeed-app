@@ -35,6 +35,16 @@ import Offers from "./pages/Offers";
 import ProductReviews from "./pages/ProductReviews";
 import BiometricTest from "./pages/BiometricTest";
 import ProductReels from "./pages/ProductReels";
+import NavigateToStore from "./pages/NavigateToStore";
+import SellerOnboarding from "./pages/seller/SellerOnboarding";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerLayout from "./pages/seller/SellerLayout";
+import StoreSettings from "./pages/seller/StoreSettings";
+import SellerProducts from "./pages/seller/products/SellerProducts";
+import ProductEditor from "./pages/seller/products/ProductEditor";
+import SellerOrders from "./pages/seller/orders/SellerOrders";
+import PaymentSettings from "./pages/seller/PaymentSettings";
+import CreateOffer from "./pages/seller/offers/CreateOffer";
 import { BottomNav } from "./components/BottomNav";
 import { PageTransition } from "./components/PageTransition";
 import { SplashScreen } from "./components/SplashScreen";
@@ -71,7 +81,7 @@ const AppContent = () => {
   const location = useLocation();
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
-  const hideBottomNav = ["/login", "/register", "/reels"].includes(location.pathname);
+  const hideBottomNav = ["/login", "/register", "/reels"].includes(location.pathname) || location.pathname.startsWith("/seller");
 
   // Setup deep linking
   useDeepLinking();
@@ -278,6 +288,97 @@ const AppContent = () => {
               </PageTransition>
             }
           />
+
+          <Route
+            path="/navigate/:productId"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                  <NavigateToStore />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/seller/onboarding"
+            element={
+              <ProtectedRoute>
+                <PageTransition>
+                   <SellerOnboarding />
+                </PageTransition>
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Seller Routes with Layout */}
+          <Route path="/seller" element={<SellerLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route
+              path="dashboard"
+              element={
+                <PageTransition>
+                  <SellerDashboard />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <PageTransition>
+                  <StoreSettings />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="products"
+              element={
+                <PageTransition>
+                  <SellerProducts />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="products/new"
+              element={
+                <PageTransition>
+                  <ProductEditor />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="products/:id"
+              element={
+                <PageTransition>
+                  <ProductEditor />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="payment-settings"
+              element={
+                <PageTransition>
+                  <PaymentSettings />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="offers/new"
+              element={
+                <PageTransition>
+                  <CreateOffer />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="orders"
+              element={
+                <PageTransition>
+                  <SellerOrders />
+                </PageTransition>
+              }
+            />
+          </Route>
           <Route
             path="/biometric-test"
             element={

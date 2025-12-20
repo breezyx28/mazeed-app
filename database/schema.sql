@@ -1,426 +1,297 @@
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
--- 1. ENUMS
-create type user_role as enum ('admin', 'customer');
-create type order_status as enum ('pending', 'processing', 'shipped', 'delivered', 'cancelled');
-create type payment_type as enum ('card', 'cod', 'wallet');
-create type address_type as enum ('home', 'work', 'other');
-create type video_type as enum ('uploaded', 'external_link');
-
--- 2. PROFILES (Extends auth.users)
-create table public.profiles (
-  id uuid references auth.users on delete cascade not null primary key,
-  full_name text,
-  avatar_url text,
-  phone_number text,
-  gender text,
-  age integer,
-  role user_role default 'customer',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 3. CATEGORIES
-create table public.categories (
-  id text primary key, -- using text ids from data file (e.g., 'Electronics')
-  name text not null,
-  name_ar text not null,
-  emoji text,
-  image_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 4. OFFER CATEGORIES
-create table public.offer_categories (
-  id text primary key, -- e.g., 'kids', 'eid'
-  name text not null,
-  name_ar text not null,
-  emoji text,
-  description text,
-  description_ar text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 5. PRODUCTS
-create table public.products (
-  id text primary key, -- using text ids from data file (e.g., '1', '2')
-  category_id text references public.categories(id) on delete set null,
-  name text not null,
-  price numeric not null,
-  original_price numeric,
-  discount numeric,
-  image text not null, -- main image
-  images text[], -- additional images
-  rating numeric default 0,
-  reviews_count integer default 0,
-  colors text[],
-  description text,
-  badges text[], -- array of strings: 'freeShipment', 'discount', etc.
-  offer_type text references public.offer_categories(id) on delete set null,
-  offer_expiry timestamp with time zone,
-  stock_quantity integer default 100,
-  is_featured boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 6. ADDRESSES
-create table public.addresses (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  type address_type default 'home',
-  street text not null,
-  city text not null,
+CREATE TABLE public.addresses (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  type text DEFAULT 'home'::address_type,
+  street text,
+  city text NOT NULL,
   state text,
   zip_code text,
-  country text default 'Sudan',
+  country text DEFAULT 'Sudan'::text,
   phone_number text,
-  is_default boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  is_default boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT addresses_pkey PRIMARY KEY (id),
+  CONSTRAINT addresses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
-
--- 7. PAYMENT METHODS
-create table public.payment_methods (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
-  code text unique not null, -- e.g., 'visa', 'mpesa'
-  type payment_type not null,
-  is_enabled boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 8. ORDERS
-create table public.orders (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete set null,
-  address_id uuid references public.addresses(id) on delete set null,
-  status order_status default 'pending',
-  total_amount numeric not null,
-  payment_method_id uuid references public.payment_methods(id),
-  tracking_number text,
-  notes text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 9. ORDER ITEMS
-create table public.order_items (
-  id uuid default uuid_generate_v4() primary key,
-  order_id uuid references public.orders(id) on delete cascade not null,
-  product_id text references public.products(id) on delete set null,
-  quantity integer not null,
-  price_at_purchase numeric not null,
-  selected_color text,
-  selected_size text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 10. INVOICES
-create table public.invoices (
-  id uuid default uuid_generate_v4() primary key,
-  order_id uuid references public.orders(id) on delete cascade not null,
-  url text not null,
-  issued_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 11. CART ITEMS
-create table public.cart_items (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  product_id text references public.products(id) on delete cascade not null,
-  quantity integer default 1,
-  selected_color text,
-  selected_size text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(user_id, product_id, selected_color, selected_size)
-);
-
--- 12. REVIEWS
-create table public.reviews (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  product_id text references public.products(id) on delete cascade not null,
-  rating integer check (rating >= 1 and rating <= 5),
-  comment text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 13. FAVORITES
-create table public.favorites (
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  product_id text references public.products(id) on delete cascade not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (user_id, product_id)
-);
-
--- 14. NOTIFICATIONS
-create table public.notifications (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  title text not null,
-  message text not null,
-  type text default 'info', -- 'order', 'promo', 'system'
-  is_read boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 15. CMS BANNERS
-create table public.cms_banners (
-  id uuid default uuid_generate_v4() primary key,
-  title text not null,
-  image_url text not null,
-  link_url text,
-  is_active boolean default true,
-  display_order integer default 0,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 16. COUPONS
-create table public.coupons (
-  id uuid default uuid_generate_v4() primary key,
-  code text unique not null,
-  discount_type text check (discount_type in ('percentage', 'fixed')),
-  value numeric not null,
-  min_purchase_amount numeric default 0,
-  max_discount_amount numeric,
-  start_date timestamp with time zone,
-  end_date timestamp with time zone,
-  usage_limit integer,
-  used_count integer default 0,
-  is_active boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 17. SUPPORT TICKETS
-create table public.support_tickets (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete set null,
-  subject text not null,
-  status text default 'open' check (status in ('open', 'in_progress', 'resolved', 'closed')),
-  priority text default 'medium' check (priority in ('low', 'medium', 'high', 'urgent')),
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 18. TICKET MESSAGES
-create table public.ticket_messages (
-  id uuid default uuid_generate_v4() primary key,
-  ticket_id uuid references public.support_tickets(id) on delete cascade not null,
-  sender_id uuid references public.profiles(id) on delete set null, -- Null if system message
-  message text not null,
-  is_staff_reply boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 19. ADMIN AUDIT LOGS
-create table public.admin_audit_logs (
-  id uuid default uuid_generate_v4() primary key,
-  admin_id uuid references public.profiles(id) on delete set null,
-  action text not null, -- e.g., 'create_product', 'update_order'
+CREATE TABLE public.admin_audit_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  admin_id uuid,
+  action text NOT NULL,
   target_table text,
   target_id text,
   details jsonb,
   ip_address text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_audit_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_audit_logs_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.profiles(id)
 );
-
--- 20. DYNAMIC PAGES
-create table public.dynamic_pages (
-  id uuid default uuid_generate_v4() primary key,
-  slug text unique not null,
-  title text not null,
-  content text, -- HTML or Markdown
-  is_published boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+CREATE TABLE public.cart_items (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  product_id text NOT NULL,
+  quantity integer DEFAULT 1,
+  selected_color text,
+  selected_size text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT cart_items_pkey PRIMARY KEY (id),
+  CONSTRAINT cart_items_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT cart_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
-
--- 21. SYSTEM SETTINGS
-create table public.system_settings (
-  key text primary key,
-  value jsonb not null,
+CREATE TABLE public.categories (
+  id text NOT NULL,
+  name text NOT NULL,
+  name_ar text NOT NULL,
+  emoji text,
+  image_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.cms_banners (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  title text NOT NULL,
+  image_url text NOT NULL,
+  link_url text,
+  is_active boolean DEFAULT true,
+  display_order integer DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT cms_banners_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.coupons (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  code text NOT NULL UNIQUE,
+  discount_type text CHECK (discount_type = ANY (ARRAY['percentage'::text, 'fixed'::text])),
+  value numeric NOT NULL,
+  min_purchase_amount numeric DEFAULT 0,
+  max_discount_amount numeric,
+  start_date timestamp with time zone,
+  end_date timestamp with time zone,
+  usage_limit integer,
+  used_count integer DEFAULT 0,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT coupons_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.dynamic_pages (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  slug text NOT NULL UNIQUE,
+  title text NOT NULL,
+  content text,
+  is_published boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT dynamic_pages_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.favorites (
+  user_id uuid NOT NULL,
+  product_id text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT favorites_pkey PRIMARY KEY (user_id, product_id),
+  CONSTRAINT favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT favorites_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.invoices (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  order_id uuid NOT NULL,
+  url text NOT NULL,
+  issued_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT invoices_pkey PRIMARY KEY (id),
+  CONSTRAINT invoices_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text DEFAULT 'info'::text,
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.offer_categories (
+  id text NOT NULL,
+  name text NOT NULL,
+  name_ar text NOT NULL,
+  emoji text,
   description text,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  description_ar text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT offer_categories_pkey PRIMARY KEY (id)
 );
-
--- 22. PRODUCT VIDEOS
-create table public.product_videos (
-  id uuid default uuid_generate_v4() primary key,
-  product_id text not null,
-  video_type video_type default 'uploaded' not null,
-  video_url text not null,
+CREATE TABLE public.order_items (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  order_id uuid NOT NULL,
+  product_id text,
+  quantity integer NOT NULL,
+  price_at_purchase numeric NOT NULL,
+  selected_color text,
+  selected_size text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  seller_id uuid,
+  CONSTRAINT order_items_pkey PRIMARY KEY (id),
+  CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
+  CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.orders (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  address_id uuid,
+  status USER-DEFINED DEFAULT 'pending'::order_status,
+  total_amount numeric NOT NULL,
+  payment_method_id uuid,
+  tracking_number text,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT orders_pkey PRIMARY KEY (id),
+  CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT orders_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.addresses(id),
+  CONSTRAINT orders_payment_method_id_fkey FOREIGN KEY (payment_method_id) REFERENCES public.payment_methods(id)
+);
+CREATE TABLE public.payment_methods (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  code text NOT NULL UNIQUE,
+  type USER-DEFINED NOT NULL,
+  is_enabled boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT payment_methods_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.product_videos (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  product_id text NOT NULL,
+  video_type USER-DEFINED NOT NULL DEFAULT 'uploaded'::video_type,
+  video_url text NOT NULL,
   thumbnail_url text,
   caption text,
   link_title text,
   link_description text,
   link_image text,
-  views integer default 0,
+  views integer DEFAULT 0,
   duration integer,
-  is_active boolean default true,
-  display_order integer default 0,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  
-  constraint fk_product_videos_product_id 
-    foreign key (product_id) 
-    references public.products(id) 
-    on delete cascade
-    on update cascade
+  is_active boolean DEFAULT true,
+  display_order integer DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT product_videos_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_product_videos_product_id FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
-
--- ROW LEVEL SECURITY (RLS) POLICIES
-
--- Enable RLS on all tables
-alter table profiles enable row level security;
-alter table categories enable row level security;
-alter table offer_categories enable row level security;
-alter table products enable row level security;
-alter table addresses enable row level security;
-alter table payment_methods enable row level security;
-alter table orders enable row level security;
-alter table order_items enable row level security;
-alter table invoices enable row level security;
-alter table cart_items enable row level security;
-alter table reviews enable row level security;
-alter table favorites enable row level security;
-alter table notifications enable row level security;
-alter table cms_banners enable row level security;
-alter table coupons enable row level security;
-alter table support_tickets enable row level security;
-alter table ticket_messages enable row level security;
-alter table admin_audit_logs enable row level security;
-alter table dynamic_pages enable row level security;
-alter table system_settings enable row level security;
-alter table product_videos enable row level security;
-
--- Profiles: Public read, User update own
-create policy "Public profiles are viewable by everyone" on profiles for select using (true);
-create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
-
--- Categories/Products/Offers: Public read, Admin write
-create policy "Categories are viewable by everyone" on categories for select using (true);
-create policy "Offer Categories are viewable by everyone" on offer_categories for select using (true);
-create policy "Products are viewable by everyone" on products for select using (true);
-
--- Addresses: User read/write own
-create policy "Users can view own addresses" on addresses for select using (auth.uid() = user_id);
-create policy "Users can insert own addresses" on addresses for insert with check (auth.uid() = user_id);
-create policy "Users can update own addresses" on addresses for update using (auth.uid() = user_id);
-create policy "Users can delete own addresses" on addresses for delete using (auth.uid() = user_id);
-
--- Orders: User read own, Admin read all
-create policy "Users can view own orders" on orders for select using (auth.uid() = user_id);
-create policy "Users can insert own orders" on orders for insert with check (auth.uid() = user_id);
-
--- Cart: User read/write own
-create policy "Users can view own cart" on cart_items for select using (auth.uid() = user_id);
-create policy "Users can manage own cart" on cart_items for all using (auth.uid() = user_id);
-
--- Favorites: User read/write own
-create policy "Users can view own favorites" on favorites for select using (auth.uid() = user_id);
-create policy "Users can manage own favorites" on favorites for all using (auth.uid() = user_id);
-
--- CMS Banners: Public read, Admin write
-create policy "Banners are viewable by everyone" on cms_banners for select using (true);
-
--- Dynamic Pages: Public read (if published), Admin write
-create policy "Published pages are viewable by everyone" on dynamic_pages for select using (is_published = true);
-
--- Coupons: Public read (if active), Admin write
-create policy "Active coupons are viewable by everyone" on coupons for select using (is_active = true);
-
--- Support Tickets: User read/write own
-create policy "Users can view own tickets" on support_tickets for select using (auth.uid() = user_id);
-create policy "Users can create tickets" on support_tickets for insert with check (auth.uid() = user_id);
-create policy "Users can update own tickets" on support_tickets for update using (auth.uid() = user_id);
-
--- Ticket Messages: User read/write own (linked to ticket)
-create policy "Users can view messages for own tickets" on ticket_messages for select using (
-  exists (select 1 from support_tickets where id = ticket_messages.ticket_id and user_id = auth.uid())
+CREATE TABLE public.products (
+  id text NOT NULL,
+  category_id text,
+  name text NOT NULL,
+  price numeric NOT NULL,
+  original_price numeric,
+  discount numeric CHECK (discount >= 0::numeric AND discount <= 100::numeric),
+  image text NOT NULL,
+  images ARRAY,
+  rating numeric DEFAULT 0,
+  reviews_count integer DEFAULT 0,
+  colors ARRAY,
+  description text,
+  badges ARRAY,
+  offer_type text,
+  offer_expiry timestamp with time zone,
+  stock_quantity integer DEFAULT 100,
+  is_featured boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  seller_id uuid,
+  status USER-DEFINED DEFAULT 'draft'::product_status,
+  preferred_payment_codes ARRAY,
+  sizes ARRAY DEFAULT '{}'::text[],
+  material text,
+  CONSTRAINT products_pkey PRIMARY KEY (id),
+  CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
+  CONSTRAINT products_offer_type_fkey FOREIGN KEY (offer_type) REFERENCES public.offer_categories(id),
+  CONSTRAINT products_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.sellers(id)
 );
-create policy "Users can create messages for own tickets" on ticket_messages for insert with check (
-  exists (select 1 from support_tickets where id = ticket_messages.ticket_id and user_id = auth.uid())
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  full_name text,
+  avatar_url text,
+  phone_number text,
+  gender text,
+  age integer,
+  role USER-DEFINED DEFAULT 'customer'::user_role,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  is_seller boolean DEFAULT false,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
-
--- Admin Audit Logs: Admin read only (No public access)
--- (Implicitly denied for public/users by default RLS)
-
--- System Settings: Public read (some), Admin write
-create policy "Settings are viewable by everyone" on system_settings for select using (true);
-
--- Product Videos: Public read (if active), Admin write
-create policy "Product videos are viewable by everyone" on product_videos for select using (is_active = true);
-create policy "Admins can manage product videos" on product_videos for all using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+CREATE TABLE public.reviews (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  product_id text NOT NULL,
+  rating integer CHECK (rating >= 1 AND rating <= 5),
+  comment text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT reviews_pkey PRIMARY KEY (id),
+  CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT reviews_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
-
--- TRIGGERS
-
--- Auto-create profile on signup
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-
--- Create indexes for product_videos
-create index idx_product_videos_product_id on product_videos(product_id);
-create index idx_product_videos_active on product_videos(is_active);
-create index idx_product_videos_display_order on product_videos(display_order);
-
--- SEED DATA
-
--- Categories
-insert into public.categories (id, name, name_ar, emoji) values
-('all', 'All', 'الكل', '🛍️'),
-('Kids', 'Kids Wear', 'ملابس الأطفال', '👶'),
-('Clothes', 'Women''s Fashion', 'أزياء النساء', '👗'),
-('MenClothes', 'Men''s Fashion', 'أزياء الرجال', '👔'),
-('Jewelry', 'Jewelry', 'المجوهرات', '💍'),
-('Electronics', 'Electronics', 'الإلكترونيات', '📱'),
-('Home', 'Home & Living', 'المنزل والمعيشة', '🏠'),
-('Sports', 'Sports', 'الرياضة', '⚽'),
-('Bags', 'Bags', 'الحقائب', '👜'),
-('Shoes', 'Shoes', 'الأحذية', '👟'),
-('Watch', 'Watches', 'الساعات', '⌚'),
-('Beauty', 'Beauty', 'الجمال', '💄');
-
--- Offer Categories
-insert into public.offer_categories (id, name, name_ar, emoji, description, description_ar) values
-('kids', 'Kids Wear Offers', 'عروض ملابس الأطفال', '👶', 'Special deals on kids clothing and accessories', 'عروض خاصة على ملابس وإكسسوارات الأطفال'),
-('eid', 'Eid Offers', 'عروض العيد', '🌙', 'Exclusive Eid collection with amazing discounts', 'مجموعة العيد الحصرية مع خصومات مذهلة'),
-('under5000', 'Under 5000 SDG', 'أقل من 5000 جنيه', '💰', 'Great products under 5000 SDG', 'منتجات رائعة بأقل من 5000 جنيه'),
-('winter', 'Winter Offers', 'عروض الشتاء', '❄️', 'Stay warm with our winter collection', 'ابق دافئًا مع مجموعة الشتاء لدينا'),
-('jewelry', 'Jewelry Offers', 'عروض المجوهرات', '💎', 'Shine bright with our jewelry deals', 'تألق مع عروض المجوهرات لدينا'),
-('flash', 'Flash Deals', 'صفقات سريعة', '⚡', 'Limited time flash deals - grab them fast!', 'صفقات سريعة لفترة محدودة - احصل عليها بسرعة!'),
-('newTrend', 'New Trends', 'أحدث الصيحات', '✨', 'Discover the latest trending products', 'اكتشف أحدث المنتجات الرائجة');
-
--- Products (Sample from products.ts)
-insert into public.products (id, name, price, original_price, discount, image, images, rating, reviews_count, category_id, colors, description, badges, offer_type, offer_expiry) values
-('1', 'Beats Solo Pro', 134550, 157050, 30, 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&h=400&fit=crop', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop'], 4.8, 345, 'Electronics', ARRAY['#000000', '#FFFFFF', '#FF0000'], 'High-performance wireless headphones with active noise cancelling', ARRAY['discount', 'flash'], 'flash', '2025-12-31'),
-('2', 'Bose Headphones', 89550, 112050, 25, 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400&h=400&fit=crop'], 4.5, 234, 'Electronics', ARRAY['#000000', '#808080'], 'Premium sound quality with superior comfort', ARRAY['discount', 'freeShipment'], 'newTrend', '2025-12-31'),
-('3', 'Canon EOS Camera', 404550, 449550, 20, 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&h=400&fit=crop'], 4.9, 189, 'Electronics', ARRAY['#000000'], 'Professional DSLR camera with 24MP sensor', ARRAY['discount'], null, null),
-('4', 'Apple Watch Series 8', 179550, null, null, 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=400&h=400&fit=crop'], 4.8, 891, 'Watch', ARRAY['#C0C0C0', '#FFD700', '#000000'], 'Advanced health and fitness features with always-on display', ARRAY['new'], 'newTrend', '2025-12-31'),
-('5', 'Nike Air Max', 58050, 71550, 40, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop'], 4.7, 567, 'Shoes', ARRAY['#000000', '#FFFFFF', '#FF0000'], 'Classic sneakers with iconic Air Max cushioning', ARRAY['discount', 'flash'], 'flash', '2025-12-31'),
-('7', 'Kids Winter Jacket', 35550, 44550, 20, 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&h=400&fit=crop'], 4.6, 234, 'Kids', ARRAY['#FF69B4', '#87CEEB', '#FFD700'], 'Warm and cozy winter jacket for kids', ARRAY['discount', 'winter', 'kids'], 'kids', '2025-12-31'),
-('10', 'Gold Necklace', 225000, 270000, 15, 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop', ARRAY['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop'], 4.9, 445, 'Jewelry', ARRAY['#FFD700'], 'Elegant 18K gold necklace', ARRAY['discount', 'jewelry'], 'jewelry', '2025-12-31');
-
--- System Settings
-insert into public.system_settings (key, value, description) values
-('site_info', '{"name": "Mazeed Store", "contact_email": "support@mazeed.com", "contact_phone": "+249912345678"}', 'General site information'),
-('privacy_policy', '{"content": "Standard privacy policy..."}', 'Privacy Policy text'),
-('terms_conditions', '{"content": "Standard terms..."}', 'Terms and Conditions text');
-
--- Payment Methods
-insert into public.payment_methods (name, code, type, is_enabled) values
-('Cash on Delivery', 'cod', 'cod', true),
-('Visa / Mastercard', 'card', 'card', true),
-('Bankak', 'bankak', 'wallet', true);
+CREATE TABLE public.seller_payment_methods (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  seller_id uuid NOT NULL,
+  name text NOT NULL,
+  code text NOT NULL,
+  type USER-DEFINED NOT NULL,
+  details jsonb,
+  is_enabled boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT seller_payment_methods_pkey PRIMARY KEY (id),
+  CONSTRAINT seller_payment_methods_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.sellers(id)
+);
+CREATE TABLE public.sellers (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  profile_id uuid NOT NULL UNIQUE,
+  shop_name text NOT NULL,
+  shop_slug text UNIQUE,
+  description text,
+  location jsonb,
+  opening_times jsonb,
+  website text,
+  logo_url text,
+  settings jsonb,
+  is_verified boolean DEFAULT false,
+  status USER-DEFINED DEFAULT 'pending'::seller_status,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  social_media jsonb,
+  cover_url text,
+  CONSTRAINT sellers_pkey PRIMARY KEY (id),
+  CONSTRAINT sellers_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.support_tickets (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  subject text NOT NULL,
+  status text DEFAULT 'open'::text CHECK (status = ANY (ARRAY['open'::text, 'in_progress'::text, 'resolved'::text, 'closed'::text])),
+  priority text DEFAULT 'medium'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT support_tickets_pkey PRIMARY KEY (id),
+  CONSTRAINT support_tickets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.system_settings (
+  key text NOT NULL,
+  value jsonb NOT NULL,
+  description text,
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT system_settings_pkey PRIMARY KEY (key)
+);
+CREATE TABLE public.ticket_messages (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  ticket_id uuid NOT NULL,
+  sender_id uuid,
+  message text NOT NULL,
+  is_staff_reply boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT ticket_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT ticket_messages_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.support_tickets(id),
+  CONSTRAINT ticket_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.profiles(id)
+);

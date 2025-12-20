@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowLeft, Bell, CreditCard, Heart, MapPin, Settings, ShoppingBag, User, Camera, AlertCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Bell, CreditCard, Heart, MapPin, Settings, ShoppingBag, User, Camera, AlertCircle, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 const Profile = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { user, profile, isProfileComplete, logout: authLogout } = useAuth();
+  const { user, profile, sellerProfile, isProfileComplete, logout: authLogout } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isRTL = i18n.language === 'ar';
@@ -159,9 +159,57 @@ const Profile = () => {
             {t('edit')}
           </button>
         </div>
+        
+        {/* Seller Section */}
+        <div className="mt-6 mb-2">
+           {!profile.is_seller ? (
+             <Button 
+               onClick={() => navigate('/seller/onboarding')} 
+               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white h-12 rounded-xl shadow-md hover:shadow-lg transition-all"
+             >
+                <div className="flex items-center gap-2">
+                   <Store className="w-5 h-5" />
+                   <span>{t('becomeASeller')}</span>
+                </div>
+             </Button>
+           ) : (
+             <div className="bg-card rounded-xl p-4 border border-border">
+                <div className="flex items-center justify-between mb-3">
+                   <div className="flex items-center gap-2">
+                      <Store className="w-5 h-5 text-primary" />
+                      <span className="font-semibold">{sellerProfile?.shop_name || t('myShop')}</span>
+                   </div>
+                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                     sellerProfile?.status === 'active' ? 'bg-green-100 text-green-700' : 
+                     sellerProfile?.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                     'bg-yellow-100 text-yellow-700'
+                   }`}>
+                      {sellerProfile?.status ? (
+                         // We might want to translate status enum values later, but for now just display them or map them
+                         sellerProfile?.status === 'pending' ? t('sellerVerificationPending') : sellerProfile?.status
+                      ) : t('sellerVerificationPending')}
+                   </span>
+                </div>
+                
+                {sellerProfile?.status === 'active' ? (
+                   <Button 
+                     onClick={() => navigate('/seller/dashboard')} 
+                     className="w-full"
+                     variant="outline"
+                   >
+                      {t('switchToSellerView')}
+                   </Button>
+                ) : (
+                   <p className="text-xs text-muted-foreground text-center">
+                     {t('sellerProfileUnderReview')}
+                   </p>
+                )}
+             </div>
+           )}
+        </div>
 
         {/* Menu Items */}
-        <div className="mt-6 space-y-2">
+        <div className="space-y-2">
           {menuItems.map((item, index) => (
             <motion.button
               key={index}
