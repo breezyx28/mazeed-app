@@ -4,13 +4,24 @@ import { ProductBadge } from "./ProductBadge";
 import { WishlistButton } from "./WishlistButton";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
+import { AnalyticsService } from "@/services/AnalyticsService";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const isArabic = i18n.language === 'ar';
+
+  const handleClick = () => {
+    const catId = (product as any).category_id || (product as any).categoryId;
+    if (user && catId) {
+      AnalyticsService.trackCategoryInteraction(user.id, catId, 'click');
+    }
+  };
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ar-SD', {
@@ -20,36 +31,45 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       maximumFractionDigits: 0,
     }).format(price);
   };
-
-  return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Link to={`/product/${product.id}`} className="group block">
-        <div className="bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border/50">
-          <div className="relative aspect-[4/5] bg-muted overflow-hidden">
-            <img 
-              src={product.image} 
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            
-            {/* Action Buttons */}
-            <div className="absolute top-3 right-3 z-10">
-              <WishlistButton 
-                productId={product.id} 
-                size="sm" 
-                className="bg-white/90 backdrop-blur-md shadow-md hover:bg-white scale-90 group-hover:scale-100 transition-transform" 
+  
+    return (
+      <motion.div
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Link to={`/product/${product.id}`} className="group block" onClick={handleClick}>
+          <div className="bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border/50">
+            <div className="relative aspect-[4/5] bg-muted overflow-hidden">
+              <img 
+                src={product.image} 
+                alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
-            </div>
-            
-            {/* Discount Badge */}
-            {product.discount && (
-              <div className="absolute top-3 left-3 bg-red-500 text-white px-2.5 py-1 rounded-xl text-[11px] font-black shadow-lg">
-                {product.discount}%
+              
+              {/* Action Buttons */}
+              <div className="absolute top-3 right-3 z-10">
+                <WishlistButton 
+                  productId={product.id} 
+                  size="sm" 
+                  className="bg-white/90 backdrop-blur-md shadow-md hover:bg-white scale-90 group-hover:scale-100 transition-transform" 
+                />
               </div>
-            )}
+              
+              {/* Status Badges Overlay */}
+              <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start">
+                {product.discount && (
+                  <div className="bg-red-500 text-white px-2.5 py-1 rounded-xl text-[11px] font-black shadow-lg">
+                    {product.discount}%
+                  </div>
+                )}
+                
+                {product.is_deliverable === false && (
+                  <div className="bg-amber-500/95 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-[9px] font-bold shadow-md flex items-center gap-1 border border-white/20 whitespace-nowrap">
+                    <span>📍</span>
+                    <span>{isArabic ? "استلام من المتجر" : "In-store pickup"}</span>
+                  </div>
+                )}
+              </div>
 
             {/* Tags Overlay (Bottom) */}
             <div className="absolute bottom-2 left-2 flex flex-wrap gap-1 max-w-[80%] opacity-0 group-hover:opacity-100 transition-opacity duration-300">

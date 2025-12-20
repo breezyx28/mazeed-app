@@ -2,6 +2,7 @@ import { Heart } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface WishlistButtonProps {
   productId: string;
@@ -11,6 +12,7 @@ interface WishlistButtonProps {
 
 export const WishlistButton = ({ productId, className, size = "md" }: WishlistButtonProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { t } = useTranslation();
   const isFavorite = isInWishlist(productId);
 
   const handleToggle = async (e: React.MouseEvent) => {
@@ -20,9 +22,9 @@ export const WishlistButton = ({ productId, className, size = "md" }: WishlistBu
     await toggleWishlist(productId);
     
     if (isFavorite) {
-      toast.success("تم إزالته من المفضلة");
+      toast.success(t("removedFromWishlist"));
     } else {
-      toast.success("تم إضافته للمفضلة");
+      toast.success(t("addedToWishlist"));
     }
   };
 

@@ -17,6 +17,7 @@ export interface Product {
   badges?: BadgeType[];
   offerType?: OfferType;
   offerExpiry?: string; // ISO date string
+  is_deliverable?: boolean;
 }
 
 export const products: Product[] = [

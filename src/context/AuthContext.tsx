@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { CapacitorUtils } from '@/lib/capacitor-utils';
+import { AnalyticsService } from '@/services/AnalyticsService';
 
 interface Profile {
   id: string;
@@ -328,6 +329,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
+      // Flush any pending analytics before logging out
+      await AnalyticsService.flush();
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Logged out successfully');

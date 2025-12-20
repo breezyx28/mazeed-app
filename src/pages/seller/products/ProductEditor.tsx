@@ -29,6 +29,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, Upload, Trash, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z.string().min(3, "Name is required"),
@@ -44,6 +45,7 @@ const formSchema = z.object({
   sizes: z.array(z.string()).optional(),
   materials: z.array(z.string()).optional(),
   discount: z.coerce.number().min(0).max(100).optional(),
+  is_deliverable: z.boolean().default(true),
 });
 
 const AVAILABLE_BADGES = ["New Arrival", "Best Seller", "In Stock", "Limited Edition"];
@@ -217,6 +219,7 @@ export default function ProductEditor() {
       sizes: [],
       materials: [],
       discount: 0,
+      is_deliverable: true,
     },
   });
 
@@ -236,6 +239,7 @@ export default function ProductEditor() {
          sizes: product.sizes || [],
          materials: product.materials || [],
          discount: product.discount || 0,
+         is_deliverable: product.is_deliverable ?? true,
        });
        setPreviewUrl(product.image);
        
@@ -330,7 +334,8 @@ export default function ProductEditor() {
         colors: values.colors,
         sizes: values.sizes,
         materials: values.materials,
-        discount: values.discount
+        discount: values.discount,
+        is_deliverable: values.is_deliverable
       };
 
       if (isEditMode) {
@@ -637,6 +642,27 @@ export default function ProductEditor() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="is_deliverable"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4 bg-muted/20">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">{t('isDeliverable')}</FormLabel>
+                  <FormDescription>
+                    {t('deliverableDescription')}
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
           <div className="grid grid-cols-2 gap-4">
              <FormField

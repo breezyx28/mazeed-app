@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 const Notifications = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loadMore, hasMore } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, loadMore, hasMore, isLoading } = useNotifications();
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all');
   const [filterDate, setFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
@@ -134,7 +134,12 @@ const Notifications = () => {
 
       <div className="max-w-md mx-auto px-4 py-6">
         <div className="space-y-3">
-          {filteredNotifications.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-20">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">{t('loading')}</p>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               {t('noNotificationsFound')}
             </div>

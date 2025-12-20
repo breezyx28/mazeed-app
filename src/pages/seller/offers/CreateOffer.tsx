@@ -336,7 +336,7 @@ export default function CreateOffer() {
                           </div>
                       </div>
                   ))}
-                  {products?.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t('noProductsFound')}</p>}
+                  {products?.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t('noPublishedProductsFound')}</p>}
               </div>
               <p className="text-xs text-muted-foreground">
                   {t('selected')}: {selectedProducts.length}

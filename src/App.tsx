@@ -49,8 +49,10 @@ import { BottomNav } from "./components/BottomNav";
 import { PageTransition } from "./components/PageTransition";
 import { SplashScreen } from "./components/SplashScreen";
 import { NotificationProvider } from "./context/NotificationContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import { useDeepLinking } from "./lib/use-deep-linking";
 
 const queryClient = new QueryClient({
@@ -438,15 +440,19 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <SettingsProvider>
-            <NotificationProvider>
-              <AuthProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <AppContent />
-                </BrowserRouter>
-              </AuthProvider>
-            </NotificationProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <WishlistProvider>
+                  <CartProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <AppContent />
+                    </BrowserRouter>
+                  </CartProvider>
+                </WishlistProvider>
+              </NotificationProvider>
+            </AuthProvider>
           </SettingsProvider>
         </TooltipProvider>
       </QueryClientProvider>

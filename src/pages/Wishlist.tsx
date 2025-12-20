@@ -1,10 +1,10 @@
 import { ArrowLeft, ArrowRight, Heart, ShoppingCart, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { products } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/context/CartContext";
 import { useMemo } from "react";
 
 const Wishlist = () => {
@@ -12,20 +12,22 @@ const Wishlist = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const { wishlistItems: wishlistData, isLoading, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
   const wishlistItems = useMemo(() => {
     return wishlistData
-      .map(item => products.find(product => product.id === item.product_id))
+      .map(item => item.product)
       .filter(Boolean);
   }, [wishlistData]);
 
   const handleRemoveFromWishlist = async (productId: string) => {
     await removeFromWishlist(productId);
-    toast.success("تم إزالته من المفضلة");
+    toast.success(t('removedFromWishlist'));
   };
 
-  const addToCart = (name: string) => {
-    toast.success(`تم إضافة ${name} إلى السلة!`);
+  const handleAddToCart = (item: any) => {
+    addToCart(item.id, 1);
+    toast.success(`${item.name} ${t('addedToCart')}`);
   };
 
   return (
@@ -40,7 +42,7 @@ const Wishlist = () => {
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              `${wishlistItems.length} عنصر`
+              `${wishlistItems.length} ${t('items')}`
             )}
           </span>
         </div>
@@ -50,17 +52,17 @@ const Wishlist = () => {
         {isLoading ? (
           <div className="text-center py-12">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">جاري تحميل المفضلة...</p>
+            <p className="text-muted-foreground">{t('loading')}</p>
           </div>
         ) : wishlistItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <Heart className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">قائمة المفضلة فارغة</h2>
-            <p className="text-muted-foreground mb-6">ابدأ بإضافة العناصر التي تحبها!</p>
+            <h2 className="text-xl font-semibold mb-2">{t('wishlistEmpty')}</h2>
+            <p className="text-muted-foreground mb-6">{t('startAddingItems')}</p>
             <Button onClick={() => navigate("/")} className="rounded-full">
-              متابعة التسوق
+              {t('continueShopping')}
             </Button>
           </div>
         ) : (
@@ -85,15 +87,15 @@ const Wishlist = () => {
                       </button>
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="font-bold text-lg">{item.price} ريال</span>
+                      <span className="font-bold text-lg">{item.price.toLocaleString()} SDG</span>
                       {item.originalPrice && (
                         <span className="text-sm text-muted-foreground line-through">
-                          {item.originalPrice} ريال
+                          {item.originalPrice.toLocaleString()} SDG
                         </span>
                       )}
                     </div>
                     <Button
-                      onClick={() => addToCart(item.name)}
+                      onClick={() => handleAddToCart(item)}
                       size="sm"
                       className="w-full rounded-full"
                     >

@@ -3,7 +3,7 @@ import { Package, Tag, TrendingUp, AlertCircle, CheckCircle, XCircle, Info, Truc
 export type NotificationType = 'success' | 'alert' | 'failure' | 'admin' | 'system' | 'delivery' | 'coupon_expired';
 
 export interface Notification {
-  id: number;
+  id: string;
   type: NotificationType;
   title: string;
   message: string;
@@ -13,7 +13,7 @@ export interface Notification {
 
 export const mockNotifications: Notification[] = [
   {
-    id: 1,
+    id: '1',
     type: 'delivery',
     title: 'Order Delivered',
     message: 'Your order #ORD-2024-001 has been delivered successfully',
@@ -21,7 +21,7 @@ export const mockNotifications: Notification[] = [
     read: false,
   },
   {
-    id: 2,
+    id: '2',
     type: 'coupon_expired',
     title: 'Coupon Expired',
     message: 'Your discount coupon SAVE20 has expired.',
@@ -29,7 +29,7 @@ export const mockNotifications: Notification[] = [
     read: false,
   },
   {
-    id: 3,
+    id: '3',
     type: 'success',
     title: 'Payment Successful',
     message: 'Payment for order #ORD-2024-003 was successful.',
@@ -37,7 +37,7 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
   {
-    id: 4,
+    id: '4',
     type: 'system',
     title: 'Complete Profile',
     message: 'Please complete your profile to get personalized recommendations.',
@@ -45,7 +45,7 @@ export const mockNotifications: Notification[] = [
     read: false,
   },
   {
-    id: 5,
+    id: '5',
     type: 'alert',
     title: 'Flash Sale Alert',
     message: 'Flash sale starts in 1 hour. Don\'t miss out!',
@@ -53,7 +53,7 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
   {
-    id: 6,
+    id: '6',
     type: 'failure',
     title: 'Payment Failed',
     message: 'Payment for order #ORD-2024-004 failed. Please try again.',
@@ -61,7 +61,7 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
   {
-    id: 7,
+    id: '7',
     type: 'admin',
     title: 'System Maintenance',
     message: 'Scheduled maintenance on Saturday at 2:00 AM.',
@@ -69,7 +69,7 @@ export const mockNotifications: Notification[] = [
     read: true,
   },
   {
-    id: 8,
+    id: '8',
     type: 'system',
     title: 'Delivery Not Available',
     message: 'Delivery service is currently unavailable in your area.',

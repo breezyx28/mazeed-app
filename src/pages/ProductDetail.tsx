@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { products } from "@/data/products";
 import { ArrowLeft, ShoppingCart, Star, Check, Share2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -11,17 +10,21 @@ import { CapacitorUtils } from "@/lib/capacitor-utils";
 import { WishlistButton } from "@/components/WishlistButton";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import { AnalyticsService } from "@/services/AnalyticsService";
+import { ReportProductDialog } from "@/components/ReportProductDialog";
+import { Flag } from "lucide-react";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { user } = useAuth();
+  const { t, i18n } = useTranslation();
+  const { addToCart } = useCart();
+  const { user, profile } = useAuth();
+  const isArabic = i18n.language === 'ar';
   
-  // Try to find in mock data first, then handle DB products later
-  const mockProduct = products.find(p => p.id === id);
-  const [product, setProduct] = useState<any>(mockProduct);
-  const [loading, setLoading] = useState(!mockProduct);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   const [selectedColor, setSelectedColor] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -29,17 +32,31 @@ const ProductDetail = () => {
   const [isCtaCollapsed, setIsCtaCollapsed] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [ratingStats, setRatingStats] = useState<Record<number, number>>({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+
+  // Helper for formatting relative time
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return t('time.justNow', 'الآن');
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}د`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}س`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}ي`;
+    return date.toLocaleDateString(i18n.language === 'ar' ? 'ar-SD' : 'en-US');
+  };
 
   // Track Interaction & Fetch DB Product if needed
   useEffect(() => {
     const initProduct = async () => {
       let currentProduct = null;
       
-      // 1. Try to find in mock data
-      const mock = products.find(p => p.id === id);
-      
-      // 2. If not in mock, fetch from Supabase
-      if (!mock && id) {
+      // Fetch from Supabase
+      if (id) {
         setLoading(true);
         const { data, error } = await supabase
           .from('products')
@@ -58,24 +75,58 @@ const ProductDetail = () => {
             rating: data.rating || 5,
             images: data.images || [data.image],
             sellerId: data.seller_id,
-            badges: data.badges || []
+            badges: data.badges || [],
+            is_deliverable: data.is_deliverable ?? true
           };
           setProduct(currentProduct);
         }
         setLoading(false);
-      } else if (mock) {
-        setProduct(mock);
-        currentProduct = mock;
-        setLoading(false);
       }
 
-      // Record "view" interaction
-      if (user && currentProduct && (currentProduct.category_id || currentProduct.categoryId)) {
-        await supabase.rpc('increment_category_interaction', {
-          p_user_id: user.id,
-          p_category_id: currentProduct.category_id || currentProduct.categoryId,
-          p_type: 'view'
-        });
+      // Record "view" interaction using professional tracking service
+      const catId = currentProduct?.category_id || currentProduct?.categoryId;
+      if (user && catId) {
+        AnalyticsService.trackCategoryInteraction(user.id, catId, 'view');
+      }
+
+      // Fetch reviews
+      fetchReviews();
+    };
+
+    const fetchReviews = async () => {
+      if (!id) return;
+      setReviewsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*, profiles(full_name, avatar_url)')
+          .eq('product_id', id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setReviews(data || []);
+
+        // Calculate breakdown from all ratings
+        const { data: allRatings, error: statsError } = await supabase
+          .from('reviews')
+          .select('rating')
+          .eq('product_id', id);
+        
+        if (!statsError && allRatings) {
+          const stats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+          allRatings.forEach(r => {
+            const star = Math.round(r.rating);
+            if (star >= 1 && star <= 5) {
+              stats[star as keyof typeof stats]++;
+            }
+          });
+          setRatingStats(stats);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setReviewsLoading(false);
       }
     };
 
@@ -115,13 +166,14 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const color = product.colors && product.colors.length > 0 ? product.colors[selectedColor] : undefined;
+    addToCart(product.id, quantity, color);
     setIsAdded(true);
-    toast.success(`${product.name} تم إضافته للسلة`);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    toast.success('جاري التوجه للدفع...');
+    handleAddToCart();
     navigate('/cart');
   };
 
@@ -271,7 +323,7 @@ const ProductDetail = () => {
           <div className="mb-6">
             <h3 className="font-semibold mb-2">{t('description')}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {product.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."}
+              {product.description || ""}
             </p>
           </div>
 
@@ -318,7 +370,7 @@ const ProductDetail = () => {
 
           {/* Rating & Reviews Section */}
           <div className="mb-6 bg-card rounded-2xl border border-border p-4">
-            <h3 className="font-semibold text-lg mb-4">التقييمات والمراجعات</h3>
+            <h3 className="font-semibold text-lg mb-4">{t('reviewsAndRatings')}</h3>
             
             {/* Overall Rating */}
             <div className="flex items-center gap-6 mb-6 pb-6 border-b border-border">
@@ -332,13 +384,16 @@ const ProductDetail = () => {
                     />
                   ))}
                 </div>
-                <div className="text-xs text-muted-foreground">{product.reviews} تقييم</div>
+                <div className="text-xs text-muted-foreground">{product.reviews} {t('reviews')}</div>
               </div>
               
               {/* Rating Breakdown */}
               <div className="flex-1 space-y-2">
                 {[5, 4, 3, 2, 1].map((stars) => {
-                  const percentage = stars === 5 ? 65 : stars === 4 ? 25 : stars === 3 ? 8 : stars === 2 ? 2 : 0;
+                  const count = ratingStats[stars as keyof typeof ratingStats] || 0;
+                  const totalReviews = Object.values(ratingStats).reduce((a, b) => a + b, 0);
+                  const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                  
                   return (
                     <div key={stars} className="flex items-center gap-2">
                       <span className="text-xs w-3">{stars}</span>
@@ -351,7 +406,7 @@ const ProductDetail = () => {
                           transition={{ duration: 0.5, delay: 0.1 }}
                         />
                       </div>
-                      <span className="text-xs text-muted-foreground w-8 text-right">{percentage}%</span>
+                      <span className="text-xs text-muted-foreground w-8 text-right">{Math.round(percentage)}%</span>
                     </div>
                   );
                 })}
@@ -360,72 +415,50 @@ const ProductDetail = () => {
 
             {/* Reviews List */}
             <div className="space-y-4">
-              {[
-                {
-                  id: 1,
-                  name: "أحمد محمد",
-                  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed",
-                  rating: 5,
-                  date: "منذ أسبوعين",
-                  comment: "منتج ممتاز جداً! الجودة عالية والسعر مناسب. أنصح بالشراء بشدة.",
-                  helpful: 12
-                },
-                {
-                  id: 2,
-                  name: "فاطمة علي",
-                  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima",
-                  rating: 4,
-                  date: "منذ شهر",
-                  comment: "جيد جداً ولكن التوصيل استغرق وقتاً أطول من المتوقع. المنتج نفسه رائع.",
-                  helpful: 8
-                },
-                {
-                  id: 3,
-                  name: "محمود حسن",
-                  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mahmoud",
-                  rating: 5,
-                  date: "منذ شهرين",
-                  comment: "تجربة شراء ممتازة. المنتج كما في الوصف تماماً. شكراً لكم!",
-                  helpful: 15
-                }
-              ].map((review, index) => (
-                <motion.div 
-                  key={review.id}
-                  className="pb-4 border-b border-border last:border-0 last:pb-0"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-start gap-3">
-                    <img 
-                      src={review.avatar} 
-                      alt={review.name}
-                      className="w-10 h-10 rounded-full bg-muted"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-sm">{review.name}</span>
-                        <span className="text-xs text-muted-foreground">{review.date}</span>
+              {reviewsLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  {t('noReviewsYet', 'لا توجد مراجعات بعد')}
+                </div>
+              ) : (
+                reviews.map((review, index) => (
+                  <motion.div 
+                    key={review.id}
+                    className="pb-4 border-b border-border last:border-0 last:pb-0"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <img 
+                        src={review.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${review.profiles?.full_name}`} 
+                        alt={review.profiles?.full_name}
+                        className="w-10 h-10 rounded-full bg-muted object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-sm">{review.profiles?.full_name}</span>
+                          <span className="text-xs text-muted-foreground">{formatTimeAgo(review.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-3 h-3 ${star <= review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} 
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+                          {review.comment}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`w-3 h-3 ${star <= review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} 
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
-                        {review.comment}
-                      </p>
-                      <button className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                        <span>👍</span>
-                        <span>مفيد ({review.helpful})</span>
-                      </button>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </div>
 
             {/* View All Reviews Button */}
@@ -434,7 +467,36 @@ const ProductDetail = () => {
               className="w-full mt-4 rounded-full"
               onClick={() => navigate(`/product/${id}/reviews`)}
             >
-              عرض جميع التقييمات ({product.reviews})
+              {t('viewAllReviews')} ({product.reviews})
+            </Button>
+          </div>
+
+          {/* Utility / Support Section */}
+          <div className="pt-12 pb-8 border-t border-border/50 mt-12 flex flex-col items-center gap-5 text-center">
+            <div className="flex flex-col items-center gap-2 max-w-[280px]">
+              <div className="w-10 h-10 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground mb-1">
+                <Flag className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-black text-foreground/80 tracking-tight">
+                {t('isSomethingWrong')}
+              </span>
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                {t('reportHelpDesc')}
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full px-6 h-10 gap-2 text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all border-dashed border-2 bg-transparent"
+              onClick={() => {
+                if (!user) {
+                  toast.error(t('loginRequired', 'Please login to report issues'));
+                  return;
+                }
+                setIsReportDialogOpen(true);
+              }}
+            >
+              <span className="text-[11px] font-black uppercase tracking-widest">{t('reportProduct')}</span>
             </Button>
           </div>
 
@@ -462,53 +524,83 @@ const ProductDetail = () => {
                 </div>
                 {product.discount && (
                   <div className="text-right">
-                    <p className="text-sm text-green-600 font-semibold">توفر {product.discount}%</p>
-                    <p className="text-xs text-muted-foreground">خصم حصري</p>
+                    <p className="text-sm text-green-600 font-semibold">
+                      {isArabic ? `توفر ${product.discount}%` : `Save ${product.discount}%`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {isArabic ? "خصم حصري" : "Exclusive Discount"}
+                    </p>
                   </div>
                 )}
               </div>
               
-              <div className="flex gap-3">
-                <motion.div
-                  whileTap={{ scale: 0.95 }}
-                  className="flex-1"
-                >
-                  <Button 
-                    variant="outline" 
-                    onClick={handleAddToCart}
-                    className="w-full h-12 rounded-full font-semibold gap-2 border-2"
-                    disabled={isAdded}
+              {product.is_deliverable !== false ? (
+                <div className="flex gap-3">
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    className="flex-1"
                   >
-                    {isAdded ? (
-                      <>
-                        <Check className="w-5 h-5" />
-                        تم الإضافة
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5" />
-                        {t('addToCart')}
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
-                
-                <motion.div
-                  whileTap={{ scale: 0.95 }}
-                  className="flex-1"
-                >
-                  <Button 
-                    onClick={handleBuyNow}
-                    className="w-full h-12 rounded-full font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    <Button 
+                      variant="outline" 
+                      onClick={handleAddToCart}
+                      className="w-full h-12 rounded-full font-semibold gap-2 border-2"
+                      disabled={isAdded}
+                    >
+                      {isAdded ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          {t('addedToCart')}
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-5 h-5" />
+                          {t('addToCart')}
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                  
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    className="flex-1"
                   >
-                    اشتري الآن
+                    <Button 
+                      onClick={handleBuyNow}
+                      className="w-full h-12 rounded-full font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    >
+                      {t('buyNow')}
+                    </Button>
+                  </motion.div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed text-center font-medium">
+                      {t('notDeliverableMessage')}
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full h-12 rounded-full font-semibold gap-2 bg-gradient-to-r from-primary to-primary/80"
+                    onClick={() => navigate(`/navigate/${product.id}`, { state: { product } })}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    {t('visitStore')}
                   </Button>
-                </motion.div>
-              </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
       </div>
+
+      <ReportProductDialog 
+        isOpen={isReportDialogOpen}
+        onOpenChange={setIsReportDialogOpen}
+        productId={product.id}
+        sellerId={product.seller_id || product.sellerId}
+        userId={user?.id || ""}
+        userName={profile?.full_name || user?.user_metadata?.full_name || ""}
+      />
     </div>
   );
 };

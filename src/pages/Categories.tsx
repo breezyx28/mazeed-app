@@ -5,14 +5,21 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { AnalyticsService } from "@/services/AnalyticsService";
 
 const Categories = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const [activeTab, setActiveTab] = useState<'categories' | 'offers'>('categories');
 
   const handleCategoryClick = (categoryId: string) => {
+    // Record interaction
+    if (user) {
+      AnalyticsService.trackCategoryInteraction(user.id, categoryId, 'click');
+    }
     // Navigate to search page with category filter
     navigate(`/search?category=${categoryId}`);
   };

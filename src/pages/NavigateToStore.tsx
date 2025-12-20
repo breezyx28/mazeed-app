@@ -12,7 +12,9 @@ import {
   ExternalLink,
   ChevronRight,
   ChevronDown,
-  Info
+  Info,
+  Map as MapIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,6 +76,7 @@ const NavigateToStore: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
 
   const [product, setProduct] = useState<any>(location.state?.product || null);
   const [seller, setSeller] = useState<any>(null);
@@ -81,16 +84,28 @@ const NavigateToStore: React.FC = () => {
   const [route, setRoute] = useState<RouteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSteps, setShowSteps] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [isBrowser, setIsBrowser] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 1. Get User Location
-        const uPos = await locationService.getCurrentLocation();
-        setUserLoc(uPos);
+        // 0. Check Platform
+        setIsBrowser(!(window as any).Capacitor);
 
-        // 2. Load Product & Seller if not in state
+        // 1. Get User Location
+        let uPosActual: UserLocation | null = null;
+        try {
+          uPosActual = await locationService.getCurrentLocation();
+          setUserLoc(uPosActual);
+          setPermissionError(null);
+        } catch (err: any) {
+          console.error('Location error:', err);
+          setPermissionError(err.message || 'Location permission denied');
+        }
+
+        // 2. Load Product & Seller
         let currentProduct = product;
         if (!currentProduct) {
           const { data: pData } = await supabase
@@ -109,19 +124,21 @@ const NavigateToStore: React.FC = () => {
             .select('*')
             .eq('id', currentProduct.seller_id || currentProduct.sellerId)
             .single();
-          if (sData) setSeller(sData);
+          if (sData) {
+            setSeller(sData);
+          }
         }
 
-        // 3. calculate route if we have both locations
-        if (uPos && (seller || currentProduct?.sellers || currentProduct?.location)) {
-          const sLoc = seller?.location || currentProduct?.sellers?.location || currentProduct?.location;
-          if (sLoc && sLoc.lat && sLoc.lng) {
-            const routeData = await locationService.getWalkingRoute(
-              { lat: uPos.lat, lng: uPos.lng },
-              { lat: sLoc.lat, lng: sLoc.lng }
-            );
-            if (routeData) setRoute(routeData);
-          }
+        // 3. calculate route
+        const activeSeller = seller || currentProduct?.sellers;
+        const sLoc = activeSeller?.location || currentProduct?.location;
+        
+        if (uPosActual && sLoc && sLoc.lat && sLoc.lng) {
+          const routeData = await locationService.getWalkingRoute(
+            { lat: uPosActual.lat, lng: uPosActual.lng },
+            { lat: sLoc.lat, lng: sLoc.lng }
+          );
+          if (routeData) setRoute(routeData);
         }
       } catch (err) {
         console.error('Navigation init error:', err);
@@ -131,11 +148,13 @@ const NavigateToStore: React.FC = () => {
     };
 
     fetchData();
-  }, [productId, product, seller]);
+  }, [productId]);
 
   const openInExternalMaps = () => {
-    if (!seller?.location) return;
-    const { lat, lng } = seller.location;
+    const activeSeller = seller || product?.sellers;
+    const sLoc = activeSeller?.location;
+    if (!sLoc || !sLoc.lat || !sLoc.lng) return;
+    const { lat, lng } = sLoc;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
     window.open(url, '_blank');
   };
@@ -145,14 +164,53 @@ const NavigateToStore: React.FC = () => {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center gap-4">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <div className="space-y-2">
-          <h2 className="text-xl font-bold">{t('common.preparingMap', 'Preparing Navigation...')}</h2>
-          <p className="text-muted-foreground">{t('common.calculatingRoute', 'Calculating your walking route in Khartoum')}</p>
+          <h2 className="text-xl font-bold">{t('nearbyProducts.preparingMap')}</h2>
+          <p className="text-muted-foreground">{t('nearbyProducts.calculatingRoute')}</p>
         </div>
       </div>
     );
   }
 
-  const storeLoc = seller?.location || product?.sellers?.location;
+  const activeSeller = seller || product?.sellers;
+  const storeLoc = activeSeller?.location;
+
+  if (permissionError && !userLoc) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 mb-6">
+          <ShieldCheck className="w-10 h-10" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">{t('nearbyProducts.locationRequired')}</h2>
+        <p className="text-muted-foreground mb-8 max-w-xs mx-auto">
+          {t('nearbyProducts.locationRequiredDesc')}
+        </p>
+        <div className="space-y-3 w-full max-w-xs">
+          <Button 
+            className="w-full h-12 rounded-full font-bold"
+            onClick={() => window.location.reload()}
+          >
+            {t('common.reset', 'Try Again')}
+          </Button>
+          <Button 
+            variant="outline"
+            className="w-full h-12 rounded-full font-bold"
+            onClick={openInExternalMaps}
+            disabled={!storeLoc}
+          >
+            <ExternalLink className="w-5 h-5 mr-2" />
+            {t('nearbyProducts.openInMaps')}
+          </Button>
+          <Button 
+            variant="ghost"
+            className="w-full"
+            onClick={() => navigate(-1)}
+          >
+            {t('common.maybeLater')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -166,9 +224,9 @@ const NavigateToStore: React.FC = () => {
         >
           <ChevronLeft className="w-6 h-6" />
         </Button>
-        <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-md px-4 py-2 text-sm font-bold flex items-center gap-2">
+        <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-md px-4 py-2 text-sm font-bold flex items-center gap-2 max-w-[200px]">
           <Navigation className="w-4 h-4" />
-          {product?.name || 'Navigation'}
+          <span className="truncate">{product?.name || t('home')}</span>
         </Badge>
         <div className="w-10 h-10" /> {/* Spacer */}
       </header>
@@ -189,12 +247,12 @@ const NavigateToStore: React.FC = () => {
             
             {/* User Marker */}
             <Marker position={[userLoc.lat, userLoc.lng]} icon={userIcon}>
-              <Popup>{t('nearbyProducts.yourLocation', 'Your Location')}</Popup>
+              <Popup>{t('profile')}</Popup>
             </Marker>
 
             {/* Store Marker */}
             <Marker position={[storeLoc.lat, storeLoc.lng]} icon={storeIcon}>
-              <Popup>{seller?.shop_name || 'Store'}</Popup>
+              <Popup>{activeSeller?.shop_name || t('nearbyProducts.inStore')}</Popup>
             </Marker>
 
             {/* Route Polyline */}
@@ -219,9 +277,9 @@ const NavigateToStore: React.FC = () => {
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-500">
                 <Info className="w-8 h-8" />
               </div>
-              <h3 className="font-bold">{t('errors.locationMissing', 'Unable to load locations')}</h3>
-              <p className="text-sm text-muted-foreground">{t('errors.locationMissingDesc', 'We couldnt detect the store or your device location.')}</p>
-              <Button onClick={() => navigate(-1)}>{t('common.goBack', 'Go Back')}</Button>
+              <h3 className="font-bold">{t('error')}</h3>
+              <p className="text-sm text-muted-foreground">{t('nearbyProducts.locationRequiredDesc')}</p>
+              <Button onClick={() => navigate(-1)}>{t('common.viewAll')}</Button>
             </div>
           </div>
         )}
@@ -241,76 +299,138 @@ const NavigateToStore: React.FC = () => {
 
       {/* Bottom Sheet Navigation Info */}
       <div className={cn(
-        "bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out z-[1001] px-6 pt-2 pb-8",
-        showSteps ? "h-[70vh]" : "h-auto"
+        "bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] transition-all duration-500 ease-in-out z-[1001] flex flex-col overflow-hidden border-t border-border/50",
+        showSteps ? "h-[85vh]" : "h-auto"
       )}>
-        {/* Handle */}
-        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6" onClick={() => setShowSteps(!showSteps)} />
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex flex-col">
-            <span className="text-3xl font-black text-primary flex items-center gap-2">
-              {route ? locationService.formatDuration(route.duration) : '--'}
-              <Clock className="w-6 h-6 text-muted-foreground" />
-            </span>
-            <span className="text-sm text-muted-foreground font-medium flex items-center gap-1">
-              {route ? locationService.formatDistance(route.distance) : '--'} • {t('nearbyProducts.walkingTime', 'Walking')}
-            </span>
+        {/* Cover Image Section */}
+        {activeSeller?.cover_url && !showSteps && (
+          <div className="relative h-24 w-full flex-shrink-0 group overflow-hidden">
+            <img 
+              src={activeSeller.cover_url} 
+              alt={activeSeller.shop_name} 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
           </div>
-          <Button 
-            size="lg" 
-            className="rounded-full px-8 bg-black hover:bg-black/90 text-white gap-2 shadow-xl active:scale-95 transition-all"
-            onClick={openInExternalMaps}
-          >
-            <Navigation className="w-5 h-5 fill-white" />
-            {t('nearbyProducts.openInMaps', 'Go')}
-          </Button>
-        </div>
+        )}
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border">
-            <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center overflow-hidden border">
-              <img src={product?.image} alt="" className="w-full h-full object-cover" />
+        <div className="px-6 pt-2 pb-8 flex-1 flex flex-col overflow-hidden">
+          {/* Handle */}
+          <div 
+            className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-4 cursor-pointer" 
+            onClick={() => setShowSteps(!showSteps)} 
+          />
+
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex flex-col">
+              <span className="text-3xl font-black text-primary flex items-center gap-2 tracking-tighter">
+                {route ? locationService.formatDuration(route.duration) : '--'}
+                <Clock className="w-6 h-6 text-muted-foreground/50" />
+              </span>
+              <span className="text-sm text-muted-foreground font-semibold flex items-center gap-1.5 uppercase tracking-wider">
+                {route ? locationService.formatDistance(route.distance) : '--'} • {t('nearbyProducts.walkingTime')}
+              </span>
             </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-sm leading-tight">{product?.name}</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">{seller?.shop_name}</p>
+            
+            <div className="flex gap-2">
+               {isBrowser && (
+                <Button 
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full w-12 h-12 border-2 border-primary/20 text-primary hover:bg-primary/5 shadow-md"
+                  onClick={openInExternalMaps}
+                >
+                  <MapIcon className="w-5 h-5" />
+                </Button>
+              )}
+              <Button 
+                size="lg" 
+                className="rounded-full px-8 bg-black hover:bg-neutral-800 text-white gap-2 shadow-xl active:scale-95 transition-all h-12"
+                onClick={openInExternalMaps}
+              >
+                <Navigation className="w-5 h-5 fill-white" />
+                <span className="font-bold">{t('nearbyProducts.openInMaps')}</span>
+              </Button>
             </div>
-            <Badge variant="outline" className="bg-white">{t('nearbyProducts.inStore', 'In Store')}</Badge>
           </div>
 
-          <div className="pt-2">
-            <button 
-              onClick={() => setShowSteps(!showSteps)}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/10 group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
-                  <MoveRight className="w-4 h-4 text-white" />
+          <div className="space-y-5 flex-1 overflow-hidden flex flex-col">
+            {/* Store Information Card */}
+            <div className="flex flex-col gap-4 p-5 rounded-[24px] bg-muted/20 border border-border/50 relative overflow-hidden group">
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center overflow-hidden border-2 border-white ring-1 ring-border/50">
+                  <img src={activeSeller?.logo_url || product?.image} alt="" className="w-full h-full object-cover" />
                 </div>
-                <span className="font-bold text-sm">{t('nearbyProducts.viewSteps', 'View Turn-by-Turn')}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-black text-base truncate leading-tight">{activeSeller?.shop_name || t('nearbyProducts.inStore')}</h4>
+                    {activeSeller?.is_verified && (
+                      <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                        <ShieldCheck className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium line-clamp-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {activeSeller?.location?.address || t('nearbyProducts.inStore')}
+                  </p>
+                </div>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-2.5 py-1 text-[10px] font-black uppercase">
+                  {t('nearbyProducts.inStore')}
+                </Badge>
               </div>
-              {showSteps ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </button>
-          </div>
+              
+              {!showSteps && activeSeller?.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 italic">
+                  "{activeSeller.description}"
+                </p>
+              )}
 
-          {showSteps && route && (
-            <div className="mt-4 overflow-y-auto max-h-[40vh] space-y-3 pb-4 scrollbar-hide">
-              {route.steps.map((step: any, idx: number) => (
-                <div key={idx} className="flex gap-4 items-start p-3 border-b border-border/50 last:border-none">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-muted-foreground text-xs font-bold">
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium leading-relaxed">{step.maneuver.instruction}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {locationService.formatDistance(step.distance)}
-                    </p>
-                  </div>
+              {/* Product Context */}
+              <div className="flex items-center gap-3 bg-white/50 dark:bg-black/20 p-2 rounded-xl border border-white/50">
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src={product?.image} alt="" className="w-full h-full object-cover" />
                 </div>
-              ))}
+                <p className="text-[11px] font-bold truncate flex-1">{product?.name}</p>
+                <div className="text-[10px] font-black text-primary px-2 bg-primary/5 rounded-full py-0.5">
+                   {t('nearbyProducts.viewProduct')}
+                </div>
+              </div>
             </div>
-          )}
+
+            <div className="pt-2">
+              <button 
+                onClick={() => setShowSteps(!showSteps)}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/10 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg group-hover:rotate-12 transition-all">
+                    <MoveRight className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="font-bold text-sm">{t('nearbyProducts.viewSteps')}</span>
+                </div>
+                {showSteps ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {showSteps && route && (
+              <div className="mt-4 overflow-y-auto max-h-[40vh] space-y-3 pb-4 scrollbar-hide">
+                {route.steps.map((step: any, idx: number) => (
+                  <div key={idx} className="flex gap-4 items-start p-3 border-b border-border/50 last:border-none">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-muted-foreground text-xs font-bold">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium leading-relaxed">{step.maneuver.instruction}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {locationService.formatDistance(step.distance)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
