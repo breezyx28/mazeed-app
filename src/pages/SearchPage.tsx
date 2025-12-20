@@ -2,7 +2,6 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "@/components/ProductCard";
-import { products, categories } from "@/data/products";
 import {
   Sheet,
   SheetContent,
@@ -14,8 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 const SearchPage = () => {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -23,6 +27,43 @@ const SearchPage = () => {
   const [sortBy, setSortBy] = useState("popular");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
+
+  // Fetch categories from database
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) return [];
+      return (data || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        nameAr: c.name_ar,
+        emoji: c.emoji
+      }));
+    }
+  });
+
+  // Fetch products with offers
+  const { data: dbProducts = [], isLoading } = useQuery({
+    queryKey: ['public-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, product_offers(offer_category_id, expiry_date)')
+        .eq('status', 'published');
+      
+      if (error) return [];
+      
+      return (data || []).map((p: any) => ({
+        ...p,
+        offers: p.product_offers || [],
+        originalPrice: p.original_price,
+        reviews: p.reviews_count || 0,
+        sellerId: p.seller_id,
+        images: p.images || [p.image]
+      }));
+    }
+  });
 
   // Read URL parameters on mount
   useEffect(() => {
@@ -37,14 +78,27 @@ const SearchPage = () => {
     }
   }, [searchParams]);
 
-  const filteredProducts = products
+  const filteredProducts = dbProducts
     .filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+      const matchesCategory = selectedCategory === "all" || product.category_id === selectedCategory;
       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-      const matchesOffer = !selectedOffer || product.offerType === selectedOffer;
-      const isNotExpired = !product.offerExpiry || new Date(product.offerExpiry) > new Date();
-      return matchesSearch && matchesCategory && matchesPrice && matchesOffer && isNotExpired;
+      
+      let matchesOffer = !selectedOffer;
+      if (selectedOffer) {
+        if (selectedOffer === 'under5000') {
+          matchesOffer = product.price < 5000;
+        } else {
+          matchesOffer = product.offers.some((off: any) => {
+            const normalized = off.offer_category_id === 'flash-sale' ? 'flash' : off.offer_category_id;
+            const matchType = normalized === selectedOffer;
+            if (!matchType) return false;
+            return !off.expiry_date || new Date(off.expiry_date) > new Date();
+          });
+        }
+      }
+
+      return matchesSearch && matchesCategory && matchesPrice && matchesOffer;
     })
     .sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price;
@@ -74,7 +128,7 @@ const SearchPage = () => {
               <Search className="w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t('searchProducts')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 bg-transparent border-none outline-none py-3"
@@ -94,19 +148,19 @@ const SearchPage = () => {
               </SheetTrigger>
               <SheetContent side="bottom" className="max-w-md mx-auto rounded-t-3xl">
                 <SheetHeader>
-                  <SheetTitle>Filters & Sort</SheetTitle>
+                  <SheetTitle>{t('filtersAndSort')}</SheetTitle>
                 </SheetHeader>
 
                 <div className="py-6 space-y-6">
                   {/* Sort By */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold">Sort By</Label>
+                    <Label className="text-sm font-semibold">{t('sortBy')}</Label>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { value: "popular", label: "Popular" },
-                        { value: "price-low", label: "Price: Low to High" },
-                        { value: "price-high", label: "Price: High to Low" },
-                        { value: "name", label: "Name" },
+                        { value: "popular", label: t('popular') },
+                        { value: "price-low", label: t('priceLowHigh') },
+                        { value: "price-high", label: t('priceHighLow') },
+                        { value: "name", label: t('name') },
                       ].map((option) => (
                         <Badge
                           key={option.value}
@@ -123,7 +177,7 @@ const SearchPage = () => {
                   {/* Price Range */}
                   <div className="space-y-3">
                     <Label className="text-sm font-semibold">
-                      Price Range: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} SDG
+                      {t('priceRange')}: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} SDG
                     </Label>
                     <Slider
                       value={priceRange}
@@ -136,16 +190,23 @@ const SearchPage = () => {
 
                   {/* Category */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold">Category</Label>
+                    <Label className="text-sm font-semibold">{t('category')}</Label>
                     <div className="flex flex-wrap gap-2">
-                      {categories.map((category) => (
+                      <Badge
+                        variant={selectedCategory === 'all' ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedCategory('all')}
+                      >
+                        {t('all')}
+                      </Badge>
+                      {dbCategories.map((category: any) => (
                         <Badge
                           key={category.id}
                           variant={selectedCategory === category.id ? "default" : "outline"}
                           className="cursor-pointer"
                           onClick={() => setSelectedCategory(category.id)}
                         >
-                          {category.name}
+                          {isArabic ? category.nameAr : category.name}
                         </Badge>
                       ))}
                     </div>
@@ -154,10 +215,10 @@ const SearchPage = () => {
                   {/* Action Buttons */}
                   <div className="flex gap-3 pt-4">
                     <Button variant="outline" onClick={resetFilters} className="flex-1 rounded-full">
-                      Reset
+                      {t('reset')}
                     </Button>
                     <Button onClick={applyFilters} className="flex-1 rounded-full">
-                      Apply Filters
+                      {t('applyFilters')}
                     </Button>
                   </div>
                 </div>
@@ -170,7 +231,17 @@ const SearchPage = () => {
       <div className="max-w-md mx-auto px-4">
         {/* Categories */}
         <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-          {categories.map((category) => (
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              selectedCategory === 'all'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {t('all')}
+          </button>
+          {dbCategories.map((category: any) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
@@ -180,15 +251,14 @@ const SearchPage = () => {
                   : "bg-muted text-muted-foreground hover:bg-accent"
               }`}
             >
-              {category.name}
+              {isArabic ? category.nameAr : category.name}
             </button>
           ))}
         </div>
 
-        {/* Results Count */}
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
-            {filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"} found
+            {t('resultsFound', { count: filteredProducts.length })}
           </p>
         </div>
 
@@ -199,10 +269,10 @@ const SearchPage = () => {
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {filteredProducts.length === 0 && !isLoading && (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">No products found</p>
-            <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters</p>
+            <p className="text-muted-foreground">{t('noProductsFound')}</p>
+            <p className="text-sm text-muted-foreground mt-2">{t('tryAdjustingFilters')}</p>
           </div>
         )}
       </div>

@@ -6,66 +6,91 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 interface OfferSectionProps {
-  offerType: OfferType;
+  offerType: string;
   products: Product[];
+  category?: any;
   maxItems?: number;
 }
 
-export const OfferSection = ({ offerType, products, maxItems = 6 }: OfferSectionProps) => {
-  const { i18n } = useTranslation();
+export const OfferSection = ({ offerType, products, category, maxItems = 3 }: OfferSectionProps) => {
+  const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   
   if (!offerType) return null;
   
-  const offerCategory = offerCategories.find(o => o.id === offerType);
+  // Use passed category or fallback to mocked data only if necessary
+  const offerCategory = category || offerCategories.find(o => o.id === offerType);
   if (!offerCategory) return null;
   
+  // Adjusted filter: prioritize offerType, and handle cases where products might not have expiry set yet
   const filteredProducts = products
-    .filter(p => p.offerType === offerType && p.offerExpiry && new Date(p.offerExpiry) > new Date())
+    .filter(p => {
+      // Handle "Under 5000" special case
+      if (offerType === 'under5000') {
+        return (p as any).price < 5000;
+      }
+
+      const offers = (p as any).offers || [];
+      return offers.some((offer: any) => {
+        // Map server "flash-sale" to local "flash"
+        const normalizedOfferType = offer.offer_category_id === 'flash-sale' ? 'flash' : offer.offer_category_id;
+        
+        if (normalizedOfferType !== offerType) return false;
+        
+        // If there's an expiry date, check it. Otherwise, assume it's active.
+        if (offer.expiry_date) {
+          return new Date(offer.expiry_date) > new Date();
+        }
+        return true;
+      });
+    })
     .slice(0, maxItems);
   
   if (filteredProducts.length === 0) return null;
   
   return (
     <motion.section 
-      className="mb-8"
+      className="mb-10 last:mb-0"
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{offerCategory.emoji}</span>
-          <div>
-            <h2 className="text-xl font-bold">
+      <div className="flex items-center justify-between mb-5 px-1">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 flex items-center justify-center bg-primary/5 border border-primary/10 rounded-2xl text-2xl shadow-inner">
+            {offerCategory.emoji}
+          </div>
+          <div className="flex flex-col flex-1 gap-0.5">
+            <h2 className="text-lg font-black tracking-tight leading-tight">
               {isArabic ? offerCategory.nameAr : offerCategory.name}
             </h2>
-            <p className="text-xs text-muted-foreground">
-              {isArabic ? offerCategory.descriptionAr : offerCategory.description}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] text-muted-foreground font-medium line-clamp-1">
+                {isArabic ? offerCategory.descriptionAr : offerCategory.description}
+              </p>
+              <Link 
+                to={`/search?offer=${offerType}`} 
+                className="flex-shrink-0 flex items-center gap-0.5 text-[10px] font-bold text-primary hover:underline"
+              >
+                <span>{isArabic ? 'عرض المزيد' : 'View More'}</span>
+                <ChevronRight className={`w-2.5 h-2.5 ${isArabic ? 'rotate-180' : ''}`} />
+              </Link>
+            </div>
           </div>
         </div>
-        <Link 
-          to="/offers" 
-          className="flex items-center gap-1 text-primary text-sm font-medium hover:underline"
-        >
-          <span>{isArabic ? 'المزيد' : 'More'}</span>
-          <ChevronRight className={`w-4 h-4 ${isArabic ? 'rotate-180' : ''}`} />
-        </Link>
       </div>
       
       {/* Horizontal Scrollable Products */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-6 -mx-4 px-4">
         {filteredProducts.map((product) => (
-          <motion.div 
+          <div 
             key={product.id} 
-            className="flex-shrink-0 w-48"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
+            className="flex-shrink-0 w-[184px]"
           >
             <ProductCard product={product} />
-          </motion.div>
+          </div>
         ))}
       </div>
     </motion.section>

@@ -1,5 +1,5 @@
-export type BadgeType = 'freeShipment' | 'discount' | 'winter' | 'eid' | 'new' | 'flash' | 'kids' | 'jewelry';
-export type OfferType = 'kids' | 'eid' | 'winter' | 'jewelry' | 'flash' | 'newTrend' | 'under5000' | null;
+export type BadgeType = 'freeShipment' | 'discount' | 'winter' | 'eid' | 'new' | 'flash' | 'kids' | 'jewelry' | 'accessories';
+export type OfferType = 'kids' | 'eid' | 'winter' | 'jewelry' | 'flash' | 'newTrend' | 'under5000' | 'accessories' | null;
 
 export interface Product {
   id: string;
@@ -502,7 +502,7 @@ export interface OfferCategory {
 export const offerCategories: OfferCategory[] = [
   {
     id: 'kids',
-    name: "Kids Wear Offers",
+    name: "Kids clothes offer",
     nameAr: "عروض ملابس الأطفال",
     emoji: "👶",
     description: "Special deals on kids clothing and accessories",
@@ -518,7 +518,7 @@ export const offerCategories: OfferCategory[] = [
   },
   {
     id: 'under5000',
-    name: "Under 5000 SDG",
+    name: "less than 5000 SDG offers",
     nameAr: "أقل من 5000 جنيه",
     emoji: "💰",
     description: "Great products under 5000 SDG",
@@ -526,11 +526,35 @@ export const offerCategories: OfferCategory[] = [
   },
   {
     id: 'winter',
-    name: "Winter Offers",
+    name: "winter Offers",
     nameAr: "عروض الشتاء",
     emoji: "❄️",
     description: "Stay warm with our winter collection",
     descriptionAr: "ابق دافئًا مع مجموعة الشتاء لدينا"
+  },
+  {
+    id: 'accessories',
+    name: "accessories Offers",
+    nameAr: "عروض الإكسسوارات",
+    emoji: "👜",
+    description: "Stylish accessories for your outfit",
+    descriptionAr: "إكسسوارات أنيقة لمظهرك"
+  },
+  {
+    id: 'flash',
+    name: "Flash Sales",
+    nameAr: "صفقات سريعة",
+    emoji: "⚡",
+    description: "Limited time flash deals - grab them fast!",
+    descriptionAr: "صفقات سريعة لفترة محدودة - احصل عليها بسرعة!"
+  },
+  {
+    id: 'newTrend',
+    name: "Latest Trends",
+    nameAr: "أحدث الصيحات",
+    emoji: "✨",
+    description: "Discover the latest trending products",
+    descriptionAr: "اكتشف أحدث المنتجات الرائجة"
   },
   {
     id: 'jewelry',
@@ -539,22 +563,6 @@ export const offerCategories: OfferCategory[] = [
     emoji: "💎",
     description: "Shine bright with our jewelry deals",
     descriptionAr: "تألق مع عروض المجوهرات لدينا"
-  },
-  {
-    id: 'flash',
-    name: "Flash Deals",
-    nameAr: "صفقات سريعة",
-    emoji: "⚡",
-    description: "Limited time flash deals - grab them fast!",
-    descriptionAr: "صفقات سريعة لفترة محدودة - احصل عليها بسرعة!"
-  },
-  {
-    id: 'newTrend',
-    name: "New Trends",
-    nameAr: "أحدث الصيحات",
-    emoji: "✨",
-    description: "Discover the latest trending products",
-    descriptionAr: "اكتشف أحدث المنتجات الرائجة"
   }
 ];
 
@@ -622,6 +630,13 @@ export const badgeConfigs: BadgeConfig[] = [
     labelAr: 'مجوهرات',
     emoji: '💎',
     colorClass: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20'
+  },
+  {
+    type: 'accessories',
+    label: 'Accessories',
+    labelAr: 'إكسسوارات',
+    emoji: '👜',
+    colorClass: 'bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20'
   }
 ];
 

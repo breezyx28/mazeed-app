@@ -1,9 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { categories, offerCategories, products } from "@/data/products";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 const Categories = () => {
   const navigate = useNavigate();
@@ -20,13 +21,71 @@ const Categories = () => {
     navigate(`/search?offer=${offerId}`);
   };
 
-  // Get active offers (not expired)
-  const activeOffers = offerCategories.filter(offer => {
-    const offerProducts = products.filter(
-      p => p.offerType === offer.id && 
-      p.offerExpiry && 
-      new Date(p.offerExpiry) > new Date()
-    );
+  // Fetch categories from database
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) {
+        console.error(error);
+        return [];
+      }
+      return (data || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        nameAr: c.name_ar,
+        emoji: c.emoji
+      }));
+    }
+  });
+
+  // Fetch offer categories from database
+  const { data: dbOffers = [] } = useQuery({
+    queryKey: ['offer-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('offer_categories').select('*');
+      if (error) {
+        console.error(error);
+        return [];
+      }
+      return (data || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        nameAr: c.name_ar,
+        emoji: c.emoji,
+        description: c.description,
+        descriptionAr: c.description_ar
+      }));
+    }
+  });
+
+  // Fetch products to count offers
+  const { data: products = [] } = useQuery({
+    queryKey: ['public-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, product_offers(offer_category_id, expiry_date)')
+        .eq('status', 'published');
+      if (error) return [];
+      return (data || []).map((p: any) => ({
+        ...p,
+        offers: p.product_offers || []
+      }));
+    }
+  });
+
+  const activeOffers = dbOffers.filter(offer => {
+    const offerProducts = products.filter(p => {
+      if (offer.id === 'under5000') return p.price < 5000;
+      
+      return p.offers.some((pOffer: any) => {
+        const normalizedOfferType = pOffer.offer_category_id === 'flash-sale' ? 'flash' : pOffer.offer_category_id;
+        if (normalizedOfferType !== offer.id) return false;
+        if (pOffer.expiry_date) return new Date(pOffer.expiry_date) > new Date();
+        return true;
+      });
+    });
     return offerProducts.length > 0;
   });
 
@@ -77,7 +136,7 @@ const Categories = () => {
         {/* Categories Tab Content */}
         {activeTab === 'categories' && (
           <div className="grid grid-cols-2 gap-3">
-            {categories.filter(cat => cat.id !== 'all').map((category, index) => (
+            {dbCategories.map((category: any, index: number) => (
               <motion.button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
@@ -104,12 +163,17 @@ const Categories = () => {
         {/* Offers Tab Content */}
         {activeTab === 'offers' && (
           <div className="grid grid-cols-2 gap-3">
-            {activeOffers.map((offer, index) => {
-              const offerProductCount = products.filter(
-                p => p.offerType === offer.id && 
-                p.offerExpiry && 
-                new Date(p.offerExpiry) > new Date()
-              ).length;
+            {activeOffers.map((offer: any, index: number) => {
+              const offerProductCount = products.filter(p => {
+                if (offer.id === 'under5000') return p.price < 5000;
+                
+                return p.offers.some((pOffer: any) => {
+                  const normalizedOfferType = pOffer.offer_category_id === 'flash-sale' ? 'flash' : pOffer.offer_category_id;
+                  if (normalizedOfferType !== offer.id) return false;
+                  if (pOffer.expiry_date) return new Date(pOffer.expiry_date) > new Date();
+                  return true;
+                });
+              }).length;
 
               return (
                 <motion.button

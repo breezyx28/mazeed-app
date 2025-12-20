@@ -346,7 +346,19 @@ const resources = {
         viewAll: 'عرض الكل',
         searching: 'جاري البحث قريباً...',
         viewOnMap: 'عرض على الخريطة'
-      }
+      },
+      filtersAndSort: 'الفلاتر والترتيب',
+      sortBy: 'ترتيب حسب',
+      popular: 'الأكثر شعبية',
+      priceLowHigh: 'السعر: من الأقل للأعلى',
+      priceHighHigh: 'السعر: من الأعلى للأقل',
+      name: 'الاسم',
+      priceRange: 'نطاق السعر',
+      reset: 'إعادة ضبط',
+      applyFilters: 'تطبيق الفلاتر',
+      resultsFound: '{{count}} نتيجة وجدت',
+      noProductsFound: 'لم يتم العثور على منتجات',
+      tryAdjustingFilters: 'جرب تعديل البحث أو الفلاتر'
     }
   },
   en: {
@@ -692,7 +704,19 @@ const resources = {
         viewAll: 'View All',
         searching: 'Searching nearby...',
         viewOnMap: 'View on Map'
-      }
+      },
+      filtersAndSort: 'Filters & Sort',
+      sortBy: 'Sort By',
+      popular: 'Popular',
+      priceLowHigh: 'Price: Low to High',
+      priceHighLow: 'Price: High to Low',
+      name: 'Name',
+      priceRange: 'Price Range',
+      reset: 'Reset',
+      applyFilters: 'Apply Filters',
+      resultsFound: '{{count}} results found',
+      noProductsFound: 'No products found',
+      tryAdjustingFilters: 'Try adjusting your search or filters'
     }
   }
 };

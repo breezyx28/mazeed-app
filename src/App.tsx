@@ -53,7 +53,15 @@ import { SettingsProvider } from "./context/SettingsContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useDeepLinking } from "./lib/use-deep-linking";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+      gcTime: 1000 * 60 * 10,  // Keep in memory for 10 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected Route Component - Must be defined before AppContent
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
