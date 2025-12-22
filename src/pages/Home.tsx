@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { NearbyProducts } from "@/components/NearbyProducts";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
+import { AnimatedEmoji } from "@/components/AnimatedEmoji";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ const Home = () => {
                 {t('welcomeBack')}
               </span>
               <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                {t('hello')} <span className="animate-bounce-slow">👋</span>
+                {t('hello')} <AnimatedEmoji emoji="👋" size={32} className="animate-bounce-slow" />
               </h1>
             </div>
             <div className="flex items-center gap-2.5">

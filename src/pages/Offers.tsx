@@ -4,12 +4,14 @@ import { useTranslation } from "react-i18next";
 import { offerCategories, products } from "@/data/products";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { AnimatedEmoji } from "@/components/AnimatedEmoji";
 
 const Offers = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // Get active offers (not expired)
   const activeOffers = offerCategories.filter(offer => {
@@ -63,6 +65,8 @@ const Offers = () => {
               <motion.button
                 key={offer.id}
                 onClick={() => handleOfferClick(offer.id as string)}
+                onMouseEnter={() => setHoveredId(offer.id as string)}
+                onMouseLeave={() => setHoveredId(null)}
                 className="bg-card rounded-2xl p-6 border border-border hover:border-primary transition-all duration-300 hover:shadow-md group relative overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -77,8 +81,12 @@ const Offers = () => {
 
                 <div className="flex flex-col items-center gap-3">
                   {/* Emoji Icon */}
-                  <div className="text-5xl group-hover:scale-110 transition-transform duration-300">
-                    {offer.emoji}
+                  <div className="group-hover:scale-110 transition-transform duration-300">
+                    <AnimatedEmoji 
+                      emoji={offer.emoji} 
+                      size={64} 
+                      hovered={hoveredId === offer.id}
+                    />
                   </div>
                   
                   {/* Offer Name */}
@@ -99,7 +107,9 @@ const Offers = () => {
         {/* Empty State */}
         {activeOffers.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🎁</div>
+            <div className="mb-4">
+              <AnimatedEmoji emoji="🎁" size={64} />
+            </div>
             <h3 className="text-lg font-semibold mb-2">
               {isArabic ? 'لا توجد عروض نشطة' : 'No Active Offers'}
             </h3>

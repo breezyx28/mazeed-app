@@ -10,6 +10,7 @@ import { LocationPermissionDialog } from './LocationPermissionDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { AnimatedEmoji } from './AnimatedEmoji';
 
 interface NearbyProduct {
   id: string;
@@ -40,6 +41,7 @@ export const NearbyProducts: React.FC = () => {
   const [products, setProducts] = useState<NearbyProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredCatId, setHoveredCatId] = useState<string | null>(null);
 
   // 1. Initial Load: Check for cached location and fetch categories
   useEffect(() => {
@@ -168,8 +170,10 @@ export const NearbyProducts: React.FC = () => {
             size="sm"
             className="rounded-full whitespace-nowrap gap-1.5"
             onClick={() => setSelectedCategory(cat.id)}
+            onMouseEnter={() => setHoveredCatId(cat.id)}
+            onMouseLeave={() => setHoveredCatId(null)}
           >
-            <span>{cat.emoji}</span>
+            <AnimatedEmoji emoji={cat.emoji} size={20} hovered={hoveredCatId === cat.id} />
             {i18n.language === 'ar' ? cat.name_ar : cat.name}
           </Button>
         ))}

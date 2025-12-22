@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { AnimatedEmoji } from "./AnimatedEmoji";
 
 interface OfferSectionProps {
   offerType: string;
@@ -59,8 +60,8 @@ export const OfferSection = ({ offerType, products, category, maxItems = 3 }: Of
       {/* Header */}
       <div className="flex items-center justify-between mb-5 px-1">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 flex items-center justify-center bg-primary/5 border border-primary/10 rounded-2xl text-2xl shadow-inner">
-            {offerCategory.emoji}
+          <div className="w-12 h-12 flex items-center justify-center bg-primary/5 border border-primary/10 rounded-2xl shadow-inner overflow-hidden">
+            <AnimatedEmoji emoji={offerCategory.emoji} size={40} />
           </div>
           <div className="flex flex-col flex-1 gap-0.5">
             <h2 className="text-lg font-black tracking-tight leading-tight">

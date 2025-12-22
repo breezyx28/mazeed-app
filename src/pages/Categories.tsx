@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { AnalyticsService } from "@/services/AnalyticsService";
+import { AnimatedEmoji } from "@/components/AnimatedEmoji";
 
 const Categories = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Categories = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const [activeTab, setActiveTab] = useState<'categories' | 'offers'>('categories');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const handleCategoryClick = (categoryId: string) => {
     // Record interaction
@@ -147,6 +149,8 @@ const Categories = () => {
               <motion.button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
+                onMouseEnter={() => setHoveredId(category.id)}
+                onMouseLeave={() => setHoveredId(null)}
                 className="bg-card rounded-2xl p-6 border border-border hover:border-primary transition-all duration-300 hover:shadow-md group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -155,8 +159,12 @@ const Categories = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="text-5xl group-hover:scale-110 transition-transform duration-300">
-                    {category.emoji}
+                  <div className="group-hover:scale-110 transition-transform duration-300">
+                    <AnimatedEmoji 
+                      emoji={category.emoji} 
+                      size={64} 
+                      hovered={hoveredId === category.id} 
+                    />
                   </div>
                   <h3 className="text-sm font-semibold text-center">
                     {isArabic ? category.nameAr : category.name}
@@ -186,6 +194,8 @@ const Categories = () => {
                 <motion.button
                   key={offer.id}
                   onClick={() => handleOfferClick(offer.id as string)}
+                  onMouseEnter={() => setHoveredId(offer.id as string)}
+                  onMouseLeave={() => setHoveredId(null)}
                   className="bg-card rounded-2xl p-6 border border-border hover:border-primary transition-all duration-300 hover:shadow-md group relative overflow-hidden"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -197,8 +207,12 @@ const Categories = () => {
                     {offerProductCount}
                   </div>
                   <div className="flex flex-col items-center gap-3">
-                    <div className="text-5xl group-hover:scale-110 transition-transform duration-300">
-                      {offer.emoji}
+                    <div className="group-hover:scale-110 transition-transform duration-300">
+                      <AnimatedEmoji 
+                        emoji={offer.emoji} 
+                        size={64} 
+                        hovered={hoveredId === offer.id}
+                      />
                     </div>
                     <div className="text-center">
                       <h3 className="text-sm font-semibold mb-1">
