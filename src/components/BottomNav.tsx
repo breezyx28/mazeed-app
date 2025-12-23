@@ -14,15 +14,18 @@ import { Icon3D } from "@/components/3DIcon";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
+import { useCart } from "@/context/CartContext";
+
 export const BottomNav = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const { cartItems } = useCart();
 
   const navItems = [
     { path: "/", icon: Home, label: t("home") },
     { path: "/categories", icon: Grid, label: t("categories") },
     { path: "/reels", icon: Video, label: t("reels") },
-    { path: "/cart", icon: ShoppingCart, label: t("cart"), badge: 2 },
+    { path: "/cart", icon: ShoppingCart, label: t("cart"), badge: cartItems.length > 0 ? cartItems.length : undefined },
     { path: "/profile", icon: Settings, label: t("settings") },
   ];
 
@@ -44,14 +47,15 @@ export const BottomNav = () => {
             >
               <div className="relative">
                 <Icon3D icon={item.icon} isActive={isActive} />
-                {item.badge && (
+                {item.badge !== undefined && (
                   <motion.span
+                    key={`badge-${item.badge}`}
                     className="absolute -top-2 -right-2 bg-primary text-primary-foreground w-5 h-5 rounded-full text-xs flex items-center justify-center font-semibold"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", delay: 0.2 }}
                   >
-                    {item.badge}
+                    {typeof item.badge === 'number' && item.badge > 9 ? '9+' : item.badge}
                   </motion.span>
                 )}
               </div>

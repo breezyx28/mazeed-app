@@ -1,4 +1,4 @@
-export type BadgeType = 'freeShipment' | 'discount' | 'winter' | 'eid' | 'new' | 'flash' | 'kids' | 'jewelry' | 'accessories';
+export type BadgeType = 'freeShipment' | 'discount' | 'winter' | 'eid' | 'new' | 'flash' | 'kids' | 'jewelry' | 'accessories' | 'New Arrival' | 'Best Seller' | 'In Stock' | 'Limited Edition';
 export type OfferType = 'kids' | 'eid' | 'winter' | 'jewelry' | 'flash' | 'newTrend' | 'under5000' | 'accessories' | null;
 
 export interface Product {
@@ -638,6 +638,34 @@ export const badgeConfigs: BadgeConfig[] = [
     labelAr: 'إكسسوارات',
     emoji: '👜',
     colorClass: 'bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20'
+  },
+  {
+    type: 'New Arrival',
+    label: 'New Arrival',
+    labelAr: 'وصول جديد',
+    emoji: '✨',
+    colorClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+  },
+  {
+    type: 'Best Seller',
+    label: 'Best Seller',
+    labelAr: 'الأكثر مبيعاً',
+    emoji: '🔥',
+    colorClass: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20'
+  },
+  {
+    type: 'In Stock',
+    label: 'In Stock',
+    labelAr: 'متوفر',
+    emoji: '✅',
+    colorClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'
+  },
+  {
+    type: 'Limited Edition',
+    label: 'Limited Edition',
+    labelAr: 'إصدار محدود',
+    emoji: '💎',
+    colorClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
   }
 ];
 

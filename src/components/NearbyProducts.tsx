@@ -196,7 +196,7 @@ export const NearbyProducts: React.FC = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="flex-shrink-0 w-44 bg-card rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all active:scale-95"
+                  className="flex-shrink-0 w-64 bg-card rounded-2xl border border-border shadow-sm overflow-hidden group hover:shadow-md transition-all active:scale-95"
                 >
                   <div className="relative aspect-square">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />

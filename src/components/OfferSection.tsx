@@ -88,7 +88,7 @@ export const OfferSection = ({ offerType, products, category, maxItems = 3 }: Of
         {filteredProducts.map((product) => (
           <div 
             key={product.id} 
-            className="flex-shrink-0 w-[184px]"
+            className="flex-shrink-0 w-[240px]"
           >
             <ProductCard product={product} />
           </div>

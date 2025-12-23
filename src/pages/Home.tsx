@@ -8,6 +8,7 @@ import { useNotifications } from "@/context/NotificationContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { NearbyProducts } from "@/components/NearbyProducts";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
@@ -18,6 +19,7 @@ const Home = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const { unreadCount } = useNotifications();
+  const { cartItems } = useCart();
   const { user } = useAuth();
 
   const { data: products = [], isLoading } = useQuery({
@@ -136,7 +138,11 @@ const Home = () => {
                 className="w-10 h-10 bg-primary hover:bg-primary/90 rounded-full transition-all flex items-center justify-center relative shadow-lg shadow-primary/20 border border-primary/20"
               >
                 <ShoppingCart className="w-5 h-5 text-primary-foreground" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full border-2 border-primary animate-pulse"></span>
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary rounded-full text-[10px] flex items-center justify-center font-black border-2 border-primary shadow-sm animate-in zoom-in duration-300">
+                    {cartItems.length > 9 ? '9+' : cartItems.length}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -235,7 +241,7 @@ const Home = () => {
             <div className="flex items-center justify-between mb-6 px-1">
               <h2 className="text-xl font-black tracking-tight">{t('popularProducts')}</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {displayProducts.map((p) => (
                  <ProductCard 
                     key={p.id}
