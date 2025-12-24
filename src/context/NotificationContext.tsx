@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
+import { CapacitorUtils } from '@/lib/capacitor-utils';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -93,7 +94,13 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           }, ...prev]);
           setTotalCount(prev => prev + 1);
           
-          // Play sound for new notification
+          // Trigger Local Notification for native device feel
+          CapacitorUtils.scheduleLocalNotification(
+            newNotif.title,
+            newNotif.message
+          );
+
+          // Also play sound and toast for in-app experience
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
           audio.play().catch(e => console.log('Audio play failed:', e));
           

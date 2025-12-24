@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-import { CapacitorUtils } from '@/lib/capacitor-utils';
-import { AnalyticsService } from '@/services/AnalyticsService';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { Session, User } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { CapacitorUtils } from "@/lib/capacitor-utils";
+import { AnalyticsService } from "@/services/AnalyticsService";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 interface Profile {
   id: string;
@@ -29,7 +30,7 @@ export interface SellerProfile {
   social_media: any | null;
   settings: any | null;
   is_verified: boolean;
-  status: 'pending' | 'active' | 'suspended' | 'rejected';
+  status: "pending" | "active" | "suspended" | "rejected";
 }
 
 interface AuthContextType {
@@ -42,7 +43,11 @@ interface AuthContextType {
   isProfileComplete: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
-  signupWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
+  signupWithEmail: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   registerBiometrics: () => Promise<boolean>;
@@ -57,23 +62,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(
+    null
+  );
   const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
   const [isFetchingProfile, setIsFetchingProfile] = useState<boolean>(false);
 
   const fetchProfile = async (userId: string) => {
     if (isFetchingProfile) return;
-    
+
     setIsFetchingProfile(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           const emptyProfile: Profile = {
             id: userId,
             full_name: null,
@@ -81,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             phone_number: null,
             gender: null,
             age: null,
-            is_seller: false
+            is_seller: false,
           };
           setProfile(emptyProfile);
           setSellerProfile(null);
@@ -90,19 +97,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         throw error;
       }
-      
+
       setProfile(data);
-      const isComplete = !!(data.full_name && data.phone_number && data.gender && data.age);
+      const isComplete = !!(
+        data.full_name &&
+        data.phone_number &&
+        data.gender &&
+        data.age
+      );
       setIsProfileComplete(isComplete);
 
       // Fetch seller profile if user is a seller
       if (data.is_seller) {
         const { data: sellerData, error: sellerError } = await supabase
-          .from('sellers')
-          .select('*')
-          .eq('profile_id', userId)
+          .from("sellers")
+          .select("*")
+          .eq("profile_id", userId)
           .single();
-        
+
         if (!sellerError && sellerData) {
           setSellerProfile(sellerData);
         } else {
@@ -111,10 +123,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setSellerProfile(null);
       }
-      
+
       return data;
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
       const emptyProfile: Profile = {
         id: userId,
         full_name: null,
@@ -122,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         phone_number: null,
         gender: null,
         age: null,
-        is_seller: false
+        is_seller: false,
       };
       setProfile(emptyProfile);
       setSellerProfile(null);
@@ -133,26 +145,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const upsertProfile = async (user: User, userData?: { full_name?: string; avatar_url?: string }) => {
+  const upsertProfile = async (
+    user: User,
+    userData?: { full_name?: string; avatar_url?: string }
+  ) => {
     try {
       const updates = {
         id: user.id,
-        full_name: userData?.full_name || user.user_metadata.full_name || user.user_metadata.name || null,
-        avatar_url: userData?.avatar_url || user.user_metadata.avatar_url || user.user_metadata.picture || null,
+        full_name:
+          userData?.full_name ||
+          user.user_metadata.full_name ||
+          user.user_metadata.name ||
+          null,
+        avatar_url:
+          userData?.avatar_url ||
+          user.user_metadata.avatar_url ||
+          user.user_metadata.picture ||
+          null,
         updated_at: new Date().toISOString(),
       };
 
       const { error } = await supabase
-        .from('profiles')
-        .upsert(updates, { onConflict: 'id' });
+        .from("profiles")
+        .upsert(updates, { onConflict: "id" });
 
       if (error) {
-        console.error('Error upserting profile:', error);
+        console.error("Error upserting profile:", error);
       }
-      
+
       await fetchProfile(user.id);
     } catch (error: any) {
-      console.error('Error in upsertProfile:', error);
+      console.error("Error in upsertProfile:", error);
       await fetchProfile(user.id);
     }
   };
@@ -164,22 +187,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-        // Register for push notifications
-        CapacitorUtils.registerPushNotifications(session.user.id);
-      }
-      
-      setIsLoading(false);
-    }).catch(error => {
-      console.error('Error getting session:', error);
-      setIsLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session);
+
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error getting session:", error);
+        setIsLoading(false);
+      });
 
     const {
       data: { subscription },
@@ -190,10 +214,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
 
       if (session?.user) {
-        CapacitorUtils.registerPushNotifications(session.user.id);
+        // Removed: CapacitorUtils.registerPushNotifications(session.user.id);
       }
 
-      if (event === 'SIGNED_OUT') {
+      if (event === "SIGNED_OUT") {
         setProfile(null);
         setSellerProfile(null);
         setIsProfileComplete(false);
@@ -202,49 +226,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Handle Deep Links for Auth (Native only)
     let cleanupDeepLink: (() => void) | undefined;
-    
+
     if (CapacitorUtils.isNative()) {
       const handleAuthDeepLink = async (url: string) => {
-        if (url.includes('code=') || url.includes('access_token=') || url.includes('refresh_token=')) {
-          console.log('Received auth deep link:', url);
-          
+        if (
+          url.includes("code=") ||
+          url.includes("access_token=") ||
+          url.includes("refresh_token=")
+        ) {
+          console.log("Received auth deep link:", url);
+
           // Handle PKCE flow (code)
-          const params = new URLSearchParams(url.split('?')[1]);
-          const code = params.get('code');
-          
+          const params = new URLSearchParams(url.split("?")[1]);
+          const code = params.get("code");
+
           if (code) {
-            console.log('Exchanging code for session...');
+            console.log("Exchanging code for session...");
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) {
-              console.error('Error exchanging code:', error);
-              toast.error('Failed to complete login');
+              console.error("Error exchanging code:", error);
+              toast.error("Failed to complete login");
             } else {
-              toast.success('Login successful!');
+              toast.success("Login successful!");
             }
           }
-          
+
           // Handle Implicit flow (hash)
-          const hash = url.split('#')[1];
+          const hash = url.split("#")[1];
           if (hash) {
             const hashParams = new URLSearchParams(hash);
-            const accessToken = hashParams.get('access_token');
-            const refreshToken = hashParams.get('refresh_token');
-            
+            const accessToken = hashParams.get("access_token");
+            const refreshToken = hashParams.get("refresh_token");
+
             if (accessToken && refreshToken) {
-               console.log('Setting session from hash...');
-               const { error } = await supabase.auth.setSession({
-                 access_token: accessToken,
-                 refresh_token: refreshToken
-               });
-               if (error) console.error('Error setting session:', error);
+              console.log("Setting session from hash...");
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (error) console.error("Error setting session:", error);
             }
           }
         }
       };
 
-      CapacitorUtils.setupDeepLinkListener(handleAuthDeepLink).then(cleanup => {
-        cleanupDeepLink = cleanup;
-      });
+      CapacitorUtils.setupDeepLinkListener(handleAuthDeepLink).then(
+        (cleanup) => {
+          cleanupDeepLink = cleanup;
+        }
+      );
     }
 
     return () => {
@@ -253,43 +283,71 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Fixed real-time subscription and unsubscription logic.
+  useEffect(() => {
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        async (payload) => {
+          const { title, body } = payload.new;
+          await LocalNotifications.schedule({
+            notifications: [
+              {
+                title,
+                body,
+                id: Date.now(),
+                schedule: { at: new Date(Date.now() + 1000) },
+              },
+            ],
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const loginWithGoogle = async () => {
     try {
-      console.log('Starting Google login...');
-      
+      console.log("Starting Google login...");
+
       // Determine redirect URL based on platform
-      const redirectTo = CapacitorUtils.isNative() 
-        ? 'mazeedapp://open' 
+      const redirectTo = CapacitorUtils.isNative()
+        ? "mazeedapp://open"
         : undefined;
-        
-      console.log('Redirecting to:', redirectTo || 'auto-detect');
+
+      console.log("Redirecting to:", redirectTo || "auto-detect");
 
       // Force web auth as per request
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+            access_type: "offline",
+            prompt: "consent",
           },
         },
       });
-      
+
       if (error) throw error;
     } catch (error: any) {
-      console.error('Login error:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      
-      let errorMessage = 'Failed to login with Google';
-      
+      console.error("Login error:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+
+      let errorMessage = "Failed to login with Google";
+
       if (error.message) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       }
-      
+
       toast.error(`Google Login Failed: ${errorMessage}`);
     }
   };
@@ -304,14 +362,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.user) {
         await upsertProfile(data.user);
       }
-      toast.success('Logged in successfully');
+      toast.success("Logged in successfully");
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     }
   };
 
-  const signupWithEmail = async (email: string, password: string, fullName: string) => {
+  const signupWithEmail = async (
+    email: string,
+    password: string,
+    fullName: string
+  ) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -328,9 +390,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.user) {
         await upsertProfile(data.user);
       }
-      toast.success('Account created! Please check your email.');
+      toast.success("Account created! Please check your email.");
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error("Signup error:", error);
       throw error;
     }
   };
@@ -339,13 +401,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Flush any pending analytics before logging out
       await AnalyticsService.flush();
-      
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast.success('Logged out successfully');
+      toast.success("Logged out successfully");
     } catch (error: any) {
-      console.error('Logout error:', error);
-      toast.error('Failed to logout');
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
     }
   };
 
@@ -353,79 +415,71 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // 1. Check browser support
       if (!window.PublicKeyCredential) {
-        throw new Error('WebAuthn is not supported in this browser');
+        throw new Error("WebAuthn is not supported in this browser");
       }
 
       // 2. Enroll via Supabase MFA (Passkey is technically a WebAuthn factor)
       // The Supabase SDK v2.43+ handles the navigator.credentials.create call internally
       const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: 'webauthn',
+        factorType: "webauthn",
       });
 
       if (error) throw error;
 
       // 3. Mark locally that we have biometrics set up on this device
-      localStorage.setItem('has_biometrics', 'true');
-      toast.success('تم تفعيل الدخول بالبصمة بنجاح');
+      localStorage.setItem("has_biometrics", "true");
+      toast.success("تم تفعيل الدخول بالبصمة بنجاح");
       return true;
     } catch (error: any) {
-      console.error('Biometric registration error:', error);
-      toast.error(error.message || 'فشل تفعيل البصمة');
+      console.error("Biometric registration error:", error);
+      toast.error(error.message || "فشل تفعيل البصمة");
       return false;
     }
   };
 
   const loginWithBiometrics = async () => {
     try {
-      console.log('Attempting biometric login...');
-      
+      console.log("Attempting biometric login...");
+
       // The Supabase SDK handles navigator.credentials.get
       const { data, error } = await (supabase.auth as any).signInWithWebAuthn();
 
       if (error) throw error;
-      
-      if (data.user) {
-        await upsertProfile(data.user);
-        toast.success('تم تسجيل الدخول بنجاح');
-        return true;
+
+      if (data) {
+        console.log("WebAuthn sign-in successful:", data);
       }
-      return false;
+      toast.success("تم تسجيل الدخول بنجاح");
     } catch (error: any) {
-      console.error('Biometric login error:', error);
-      // Don't show generic error toast here as it might be a cancellation
-      if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-         toast.error(error.message || 'فشل الدخول بالبصمة');
-      }
-      return false;
+      console.error("Biometric login error:", error);
+      toast.error(error.message || "فشل تسجيل الدخول بالبصمة");
     }
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      isLoading, 
-      user, 
-      session,
-      profile,
-      sellerProfile,
-      isProfileComplete,
-      loginWithGoogle, 
-      loginWithEmail,
-      signupWithEmail,
-      logout,
-      refreshProfile,
-      registerBiometrics,
-      loginWithBiometrics
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    isAuthenticated,
+    isLoading,
+    user,
+    session,
+    profile,
+    sellerProfile,
+    isProfileComplete,
+    loginWithGoogle,
+    loginWithEmail,
+    signupWithEmail,
+    logout,
+    refreshProfile,
+    registerBiometrics,
+    loginWithBiometrics,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
