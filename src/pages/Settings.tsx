@@ -8,10 +8,12 @@ import { useSettings } from "@/context/SettingsContext";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNotifications } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { settings, updateSettings, isBiometricAvailable } = useSettings();
+  const { registerBiometrics } = useAuth();
   const { t, i18n } = useTranslation();
   const { addNotification } = useNotifications();
 
@@ -170,18 +172,25 @@ const Settings = () => {
                     checked={settings.biometric}
                     onCheckedChange={async (checked) => {
                       if (checked) {
-                        const success = await CapacitorUtils.verifyIdentity({
-                          reason: t("enableFingerprint"),
-                          title: t("enableBiometric"),
-                          subtitle: t("confirmYourIdentityEnable"),
-                          description: t("enableFingerprintAuth"),
-                        });
-                        if (success) {
-                          updateSettings({ biometric: checked });
-                          toast.success(t("fingerprintEnabled"));
+                        try {
+                          // Try to register biometrics (Passkey) with the server
+                          const success = await registerBiometrics();
+                          
+                          if (success) {
+                            updateSettings({ biometric: true });
+                            // Flag is set in registerBiometrics, but we sync state here
+                          } else {
+                            // Registration failed, keep switch off
+                            updateSettings({ biometric: false });
+                          }
+                        } catch (error) {
+                          console.error("Biometric registration failed:", error);
+                          updateSettings({ biometric: false });
                         }
                       } else {
-                        updateSettings({ biometric: checked });
+                        // Turning off
+                        updateSettings({ biometric: false });
+                        localStorage.removeItem('has_biometrics');
                         toast.success(t("fingerprintDisabled"));
                       }
                     }}

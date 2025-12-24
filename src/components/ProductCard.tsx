@@ -1,12 +1,14 @@
 import { Product } from "@/data/products";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { ProductBadge } from "./ProductBadge";
 import { WishlistButton } from "./WishlistButton";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { AnalyticsService } from "@/services/AnalyticsService";
+import { useCart } from "@/context/CartContext";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -15,7 +17,12 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { addToCart, cartItems } = useCart();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const isArabic = i18n.language === 'ar';
+  
+  // Check if product is already in cart
+  const isInCart = cartItems.some(item => item.product_id === product.id);
 
   const handleClick = () => {
     const catId = (product as any).category_id || (product as any).categoryId;
@@ -52,7 +59,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 z-10">
+              <div className="absolute top-4 right-4 z-20">
                 <WishlistButton 
                   productId={product.id} 
                   size="sm" 
@@ -129,15 +136,28 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </div>
 
                       <div className="w-full flex-1">
-                     <button 
-                      className="w-full h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 group/btn shadow-sm"
-                      onClick={(e) => {
+                      <button 
+                      className="w-full h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 group/btn shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        // Optional: Trigger add to cart animation/logic
+                        
+                        if (isAddingToCart || isInCart) return;
+                        
+                        setIsAddingToCart(true);
+                        try {
+                          await addToCart(product.id);
+                        } finally {
+                          setIsAddingToCart(false);
+                        }
                       }}
+                      disabled={isAddingToCart || isInCart}
                     >
-                      <Plus className="w-5 h-5 transition-transform group-hover/btn:rotate-90" />
+                      {isInCart ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <Plus className="w-5 h-5 transition-transform group-hover/btn:rotate-90" />
+                      )}
                     </button>
 
                       </div>

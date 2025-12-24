@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 export interface WishlistItem {
   product_id: string;
-  product: any; // Using any for product as it has a complex structure from DB
+  product: any;
   created_at: string;
 }
 
@@ -21,93 +20,82 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
+const WISHLIST_STORAGE_KEY = 'mazeed-wishlist';
+
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchWishlist = useCallback(async () => {
-    if (!user) {
-      setWishlistItems([]);
-      setIsLoading(false);
-      return;
-    }
-
+  // Load wishlist from localStorage on mount
+  const loadWishlistFromStorage = useCallback(() => {
     try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select(`
-          product_id,
-          created_at,
-          product:products(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        setWishlistItems(data.map((item: any) => ({
-          ...item,
-          product: {
-            ...item.product,
-            originalPrice: item.product.original_price,
-            reviews: item.product.reviews_count || 0,
-            images: item.product.images || [item.product.image]
-          }
-        })));
+      const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setWishlistItems(parsed);
       }
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      console.error('Error loading wishlist from localStorage:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, []);
 
+  // Save wishlist to localStorage whenever it changes
+  const saveWishlistToStorage = useCallback((items: WishlistItem[]) => {
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving wishlist to localStorage:', error);
+    }
+  }, []);
+
+  // Load on mount
   useEffect(() => {
-    fetchWishlist();
-  }, [fetchWishlist]);
+    loadWishlistFromStorage();
+  }, [loadWishlistFromStorage]);
+
+  // Save whenever wishlist changes
+  useEffect(() => {
+    if (!isLoading) {
+      saveWishlistToStorage(wishlistItems);
+    }
+  }, [wishlistItems, isLoading, saveWishlistToStorage]);
 
   const addToWishlist = async (productId: string) => {
-    if (!user) {
-      toast.error('يرجى تسجيل الدخول أولاً');
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .upsert({
-          user_id: user.id,
-          product_id: productId,
-        }, { onConflict: 'user_id,product_id' });
+      // Fetch the product data from Supabase
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
 
-      if (error) throw error;
-      
-      await fetchWishlist();
-    } catch (error) {
+      if (productError) throw productError;
+
+      // Create wishlist item with full product data
+      const newItem: WishlistItem = {
+        product_id: productId,
+        product: {
+          ...productData,
+          originalPrice: productData.original_price,
+          reviews: productData.reviews_count || 0,
+          images: productData.images || [productData.image]
+        },
+        created_at: new Date().toISOString(),
+      };
+
+      // Add to state (will automatically save to localStorage via useEffect)
+      setWishlistItems(prev => [newItem, ...prev]);
+    } catch (error: any) {
       console.error('Error adding to wishlist:', error);
       toast.error('فشل إضافة المنتج للمفضلة');
     }
   };
 
   const removeFromWishlist = async (productId: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('product_id', productId);
-
-      if (error) throw error;
-      
-      setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
-      toast.error('فشل إزالة المنتج من المفضلة');
-    }
+    // Remove from state (will automatically save to localStorage via useEffect)
+    setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
   };
 
   const isInWishlist = (productId: string) => {
@@ -122,6 +110,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const refreshWishlist = async () => {
+    loadWishlistFromStorage();
+  };
+
   return (
     <WishlistContext.Provider
       value={{
@@ -131,7 +123,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeFromWishlist,
         toggleWishlist,
         isInWishlist,
-        refreshWishlist: fetchWishlist,
+        refreshWishlist,
       }}
     >
       {children}

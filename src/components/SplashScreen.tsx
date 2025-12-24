@@ -6,15 +6,13 @@ interface SplashScreenProps {
   minDisplayTime?: number;
 }
 
-export const SplashScreen = ({ onLoadingComplete, minDisplayTime = 2000 }: SplashScreenProps) => {
+export const SplashScreen = ({ onLoadingComplete, minDisplayTime = 2500 }: SplashScreenProps) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Ensure splash screen shows for minimum time
     const timer = setTimeout(() => {
       setIsVisible(false);
-      // Wait for exit animation to complete before calling callback
-      setTimeout(onLoadingComplete, 500);
+      setTimeout(onLoadingComplete, 800); // Wait for exit animation
     }, minDisplayTime);
 
     return () => clearTimeout(timer);
@@ -24,118 +22,106 @@ export const SplashScreen = ({ onLoadingComplete, minDisplayTime = 2000 }: Splas
     <AnimatePresence>
       {isVisible && (
         <motion.div
+          key="splash"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-white"
+          exit={{ 
+            opacity: 0, 
+            scale: 1.1,
+            filter: "blur(10px)",
+            transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black overflow-hidden"
         >
-          {/* Animated background circles */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.05, 0.1, 0.05],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/30 rounded-full blur-3xl"
-            />
-            <motion.div
-              animate={{
-                scale: [1.2, 1, 1.2],
-                opacity: [0.05, 0.1, 0.05],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.5,
-              }}
-              className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-yellow-400/30 rounded-full blur-3xl"
-            />
+          {/* Animated Background Mesh */}
+          <div className="absolute inset-0 opacity-40">
+            <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-amber-500/20 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-yellow-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
           </div>
 
-          {/* Content */}
-          <div className="relative z-10 flex flex-col items-center justify-center space-y-8">
-            {/* Logo with animation */}
+          {/* Grain/Noise Overlay for Texture */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%221%22/%3E%3C/svg%3E")' }} />
+
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            {/* Logo Container */}
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 100 }}
-              transition={{
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 1.2, 
+                ease: [0.22, 1, 0.36, 1],
                 type: "spring",
-                stiffness: 200,
-                damping: 20,
-                duration: 0.8,
+                stiffness: 100,
+                damping: 20
               }}
-              className="relative"
+              className="relative mb-8"
             >
-              {/* Glow effect - Golden */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-3xl blur-2xl scale-110 opacity-30" />
+              {/* Glassmorphic Card behind logo */}
+              <div className="absolute inset-0 bg-white/5 backdrop-blur-xl rounded-[2rem] -m-6 border border-white/10 shadow-2xl" />
               
-              {/* Logo container - White with golden border */}
-              <div className="relative">
-                <img
+              <div className="relative p-2">
+                <motion.img
                   src="/assets/icons/android-chrome-512x512.png"
-                  alt="Mazzed Logo"
-                  className="w-48 h-32 object-cover"
+                  alt="Mazeed Logo"
+                  className="w-32 h-32 object-contain drop-shadow-2xl"
+                  animate={{ 
+                    y: [0, -10, 0],
+                    filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                 />
               </div>
             </motion.div>
 
-            {/* App name */}
+            {/* Brand Name */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-center"
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="text-center space-y-2"
             >
-              <p className="text-3xl font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
-                مزيد
+              <h1 className="text-4xl font-bold text-white tracking-tight">
+                Mazeed Store
+              </h1>
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+                className="h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto opacity-50"
+              />
+              <p className="text-white/40 text-sm font-medium tracking-widest uppercase mt-2">
+                Premium Shopping
               </p>
             </motion.div>
 
-            {/* Loading indicator */}
+            {/* Subtle Loader */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.4 }}
-              className="flex flex-col items-center space-y-4"
+              transition={{ delay: 1, duration: 0.5 }}
+              className="absolute bottom-12"
             >
-              {/* Animated dots - Golden */}
-              <div className="flex space-x-2 rtl:space-x-reverse">
-                {[0, 1, 2].map((index) => (
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
                   <motion.div
-                    key={index}
-                    animate={{
-                      y: [0, -10, 0],
-                      opacity: [0.5, 1, 0.5],
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-amber-500"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.3, 1, 0.3]
                     }}
                     transition={{
-                      duration: 0.8,
+                      duration: 1,
                       repeat: Infinity,
-                      delay: index * 0.2,
-                      ease: "easeInOut",
+                      delay: i * 0.2,
+                      ease: "easeInOut"
                     }}
-                    className="w-3 h-3 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full shadow-lg"
                   />
                 ))}
               </div>
-
-              {/* Loading text - Golden */}
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="text-amber-700 text-sm font-medium"
-              >
-               جاري...
-              </motion.p>
             </motion.div>
           </div>
         </motion.div>

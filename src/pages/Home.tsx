@@ -112,7 +112,7 @@ const Home = () => {
                 {t('welcomeBack')}
               </span>
               <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                {t('hello')} <AnimatedEmoji emoji="👋" size={32} className="animate-bounce-slow" />
+                {t('hello')} <AnimatedEmoji emoji="👋" size={32} className="animate-bounce-slow" hovered timeout={2000} />
               </h1>
             </div>
             <div className="flex items-center gap-2.5">

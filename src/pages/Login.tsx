@@ -26,54 +26,30 @@ const Login = () => {
   const { settings, isBiometricAvailable } = useSettings();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { loginWithEmail, loginWithGoogle, isAuthenticated } = useAuth();
+  const { loginWithEmail, loginWithGoogle, isAuthenticated, loginWithBiometrics } = useAuth();
+  const [showBiometricLogin, setShowBiometricLogin] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
+    // Check if user has enabled biometrics on this device
+    const hasBiometrics = localStorage.getItem('has_biometrics') === 'true';
+    setShowBiometricLogin(hasBiometrics);
   }, [isAuthenticated, navigate]);
 
   const handleBiometricLogin = async () => {
-    // Ask user permission before attempting biometric auth
-    if (!CapacitorUtils.isNative()) {
-      toast.error(
-        t("biometricNotAvailableNative")
-      );
-      return;
-    }
-
-    const result = await CapacitorUtils.isBiometricAvailable();
-    if (!result.isAvailable) {
-      toast.error(t("fingerprintNotAvailable"));
-      return;
-    }
-
-    const success = await CapacitorUtils.verifyIdentity({
-      reason: t("authenticateToLogin"),
-      title: t("login"),
-      subtitle: t("useYourFingerprint"),
-      description: t("authenticateToLogin")
-    });
-
-    if (success) {
-      try {
-        const credentials = await CapacitorUtils.getCredentials({
-          server: "mazeed-store",
-        });
-
-        if (credentials && credentials.username && credentials.password) {
-          await loginWithEmail(credentials.username, credentials.password);
-          navigate("/");
-        } else {
-          toast.error(t("noSavedCredentials"));
-        }
-      } catch (error) {
-        console.error("Error retrieving credentials:", error);
-        toast.error(t("biometricAuthFailed"));
+    setIsLoading(true);
+    try {
+      // Use standard WebAuthn (Passkeys) login linked to server
+      const success = await loginWithBiometrics();
+      if (success) {
+        navigate("/");
       }
-    } else {
-      toast.error(t("biometricAuthFailed"));
+    } catch (error) {
+      console.error("Biometric login failed:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -199,7 +175,7 @@ const Login = () => {
               {t("loginWithGoogle")}
             </Button>
 
-            {(isBiometricAvailable || CapacitorUtils.isNative()) && (
+            {showBiometricLogin && (
               <Button
                 variant="outline"
                 onClick={handleBiometricLogin}

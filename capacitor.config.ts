@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.mazeedapp.app',
-  appName: 'Mazzed',
+  appName: 'Mazeed',
   webDir: 'dist',
   plugins: {
     NativeBiometric: {
@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     },
      GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: '483329714188-rjrddhk71mbd25859embl5kare6ei74g.apps.googleusercontent.com',
+      serverClientId: '483329714188-3498q4gkjig7jo1honqjqmrie7c36roo.apps.googleusercontent.com',
       forceCodeForRefreshToken: true
     }
   }

@@ -45,6 +45,8 @@ interface AuthContextType {
   signupWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  registerBiometrics: () => Promise<boolean>;
+  loginWithBiometrics: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -347,6 +349,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const registerBiometrics = async () => {
+    try {
+      // 1. Check browser support
+      if (!window.PublicKeyCredential) {
+        throw new Error('WebAuthn is not supported in this browser');
+      }
+
+      // 2. Enroll via Supabase MFA (Passkey is technically a WebAuthn factor)
+      // The Supabase SDK v2.43+ handles the navigator.credentials.create call internally
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'webauthn',
+      });
+
+      if (error) throw error;
+
+      // 3. Mark locally that we have biometrics set up on this device
+      localStorage.setItem('has_biometrics', 'true');
+      toast.success('تم تفعيل الدخول بالبصمة بنجاح');
+      return true;
+    } catch (error: any) {
+      console.error('Biometric registration error:', error);
+      toast.error(error.message || 'فشل تفعيل البصمة');
+      return false;
+    }
+  };
+
+  const loginWithBiometrics = async () => {
+    try {
+      console.log('Attempting biometric login...');
+      
+      // The Supabase SDK handles navigator.credentials.get
+      const { data, error } = await (supabase.auth as any).signInWithWebAuthn();
+
+      if (error) throw error;
+      
+      if (data.user) {
+        await upsertProfile(data.user);
+        toast.success('تم تسجيل الدخول بنجاح');
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error('Biometric login error:', error);
+      // Don't show generic error toast here as it might be a cancellation
+      if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+         toast.error(error.message || 'فشل الدخول بالبصمة');
+      }
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
@@ -360,7 +413,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loginWithEmail,
       signupWithEmail,
       logout,
-      refreshProfile
+      refreshProfile,
+      registerBiometrics,
+      loginWithBiometrics
     }}>
       {children}
     </AuthContext.Provider>
