@@ -45,7 +45,10 @@ const days = [
   "sunday",
 ] as const;
 
-export function OpeningHoursPicker({ value, onChange }: OpeningHoursPickerProps) {
+export function OpeningHoursPicker({
+  value,
+  onChange,
+}: OpeningHoursPickerProps) {
   const { t } = useTranslation();
 
   // Ensure we have a valid structure even if value is partial
@@ -62,7 +65,10 @@ export function OpeningHoursPicker({ value, onChange }: OpeningHoursPickerProps)
     },
   };
 
-  const updateSchedule = (day: keyof OpeningHoursData["schedule"], updates: Partial<DaySchedule>) => {
+  const updateSchedule = (
+    day: keyof OpeningHoursData["schedule"],
+    updates: Partial<DaySchedule>
+  ) => {
     const newSchedule = {
       ...safeValue.schedule,
       [day]: { ...safeValue.schedule[day], ...updates },
@@ -75,7 +81,7 @@ export function OpeningHoursPicker({ value, onChange }: OpeningHoursPickerProps)
   };
 
   return (
-    <div className="space-y-4 border rounded-md p-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <Label className="text-base">Open 24/7</Label>
@@ -101,30 +107,41 @@ export function OpeningHoursPicker({ value, onChange }: OpeningHoursPickerProps)
                   onCheckedChange={(checked) =>
                     updateSchedule(day, { enabled: checked === true })
                   }
-                  className="mr-2"
+                  className="mr-1"
                 />
-                <Label htmlFor={`day-${day}`} className="w-24 capitalize cursor-pointer">
-                  {t(day) !== day ? t(day) : day.charAt(0).toUpperCase() + day.slice(1)}
+                <Label
+                  htmlFor={`day-${day}`}
+                  className="w-16 text-[12px] capitalize cursor-pointer"
+                >
+                  {t(day) !== day
+                    ? t(day)
+                    : day.charAt(0).toUpperCase() + day.slice(1)}
                 </Label>
-                
+
                 {safeValue.schedule[day].enabled ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Input
                       type="time"
                       value={safeValue.schedule[day].open}
-                      onChange={(e) => updateSchedule(day, { open: e.target.value })}
-                      className="w-28 h-8"
+                      onChange={(e) =>
+                        updateSchedule(day, { open: e.target.value })
+                      }
+                      className="w-24 h-8 !text-[12px]"
                     />
                     <span>-</span>
                     <Input
                       type="time"
                       value={safeValue.schedule[day].close}
-                      onChange={(e) => updateSchedule(day, { close: e.target.value })}
-                      className="w-28 h-8"
+                      onChange={(e) =>
+                        updateSchedule(day, { close: e.target.value })
+                      }
+                      className="w-24 h-8 !text-[12px]"
                     />
                   </div>
                 ) : (
-                  <span className="text-muted-foreground text-sm italic ml-2">Closed</span>
+                  <span className="text-muted-foreground text-sm italic ml-2">
+                    Closed
+                  </span>
                 )}
               </div>
             ))}

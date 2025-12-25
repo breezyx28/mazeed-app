@@ -20,18 +20,18 @@ export default function SellerProducts() {
   const navigate = useNavigate();
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ['seller-products', sellerProfile?.id],
+    queryKey: ["seller-products", sellerProfile?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('seller_id', sellerProfile?.id)
-        .order('created_at', { ascending: false });
-      
+        .from("products")
+        .select("*")
+        .eq("seller_id", sellerProfile?.id)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data;
     },
-    enabled: !!sellerProfile?.id
+    enabled: !!sellerProfile?.id,
   });
 
   if (isLoading) {
@@ -43,29 +43,38 @@ export default function SellerProducts() {
   }
 
   return (
-    <div className="container p-4 pb-24 mx-auto space-y-4">
+    <div className="container p-4 pb-24 mx-auto space-y-4 max-w-md">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('products')}</h1>
-        <Button onClick={() => navigate('/seller/products/new')} size="sm">
+        <h1 className="text-2xl font-bold">{t("products")}</h1>
+        <Button onClick={() => navigate("/seller/products/new")} size="sm">
           <Plus className="w-4 h-4 mr-1" />
-          {t('addNewProduct')}
+          {t("addNewProduct")}
         </Button>
       </div>
 
       <div className="grid gap-4">
         {products?.map((product) => (
-          <div key={product.id} className="bg-card p-4 rounded-xl border shadow-sm flex gap-4">
+          <div
+            key={product.id}
+            className="bg-card p-4 rounded-xl border shadow-sm flex gap-4"
+          >
             <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between">
                 <div>
-                   <h3 className="font-semibold truncate pr-2">{product.name}</h3>
-                   <div className="text-sm text-muted-foreground mt-1">
-                     {product.stock_quantity} {t('inStockLabel')}
-                   </div>
+                  <h3 className="font-semibold truncate pr-2">
+                    {product.name}
+                  </h3>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {product.stock_quantity} {t("inStockLabel")}
+                  </div>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -75,22 +84,30 @@ export default function SellerProducts() {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate(`/seller/products/${product.id}`)}>
+                    <DropdownMenuItem
+                      onClick={() => navigate(`/seller/products/${product.id}`)}
+                    >
                       <Edit className="w-4 h-4 mr-2" />
-                      {t('edit')}
+                      {t("edit")}
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">
                       <Trash className="w-4 h-4 mr-2" />
-                      {t('delete')}
+                      {t("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              
+
               <div className="flex items-center justify-between mt-2">
-                <span className="font-bold">{product.price.toLocaleString()} SDG</span>
-                <Badge variant={product.status === 'published' ? 'default' : 'secondary'}>
-                  {product.status === 'published' ? t('published') : t('draft')}
+                <span className="font-bold">
+                  {product.price.toLocaleString()} SDG
+                </span>
+                <Badge
+                  variant={
+                    product.status === "published" ? "default" : "secondary"
+                  }
+                >
+                  {product.status === "published" ? t("published") : t("draft")}
                 </Badge>
               </div>
             </div>
@@ -99,9 +116,12 @@ export default function SellerProducts() {
 
         {products?.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <p>{t('noProductsYet')}</p>
-            <Button variant="link" onClick={() => navigate('/seller/products/new')}>
-              {t('createFirstProduct')}
+            <p>{t("noProductsYet")}</p>
+            <Button
+              variant="link"
+              onClick={() => navigate("/seller/products/new")}
+            >
+              {t("createFirstProduct")}
             </Button>
           </div>
         )}
