@@ -9,7 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
-database
+# database
 dist-ssr
 *.local
 
@@ -25,6 +25,7 @@ dist-ssr
 *.sw?
 *.txt
 *.sql
+!database/**/*.sql
 .env
 .env.local
 .env.example
